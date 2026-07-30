@@ -1,0 +1,40 @@
+========================================================================
+        EMROD SARL — MODE D'EMPLOI : 03 - LES BONS DE COMMANDE
+========================================================================
+
+Ce document vous explique comment sont gérés les bons de commande 
+lorsqu'un client passe commande depuis la boutique en ligne.
+
+------------------------------------------------------------------------
+COMMENT SE PASSE UNE COMMANDE ?
+------------------------------------------------------------------------
+1. Le client navigue sur la boutique, voit l'acompte de 60% requis, 
+   et clique sur "Passer commande".
+2. Il remplit son Nom, Prénom, Téléphone et Adresse de livraison.
+3. Dès qu'il valide :
+   - Un BON DE COMMANDE officiel (.txt) est automatiquement généré.
+   - Le client est redirigé vers le WhatsApp d'EMROD (+224 623 88 59 59)
+     avec un message pré-rempli pour confirmer le paiement de l'acompte.
+
+------------------------------------------------------------------------
+OÙ TROUVER LES BONS DE COMMANDE ?
+------------------------------------------------------------------------
+1. Ouvrez votre Google Drive.
+2. Allez dans le dossier "Bons de commande" 
+   (ID: 1-FPIxzxKVLcutOct5dcDv5gZ8mRFrEjM).
+3. Vous y trouverez des fichiers texte nommés sous le format :
+   "BonCommande_NomDuClient_1730000000.txt"
+
+------------------------------------------------------------------------
+COMMENT LIRE UN BON DE COMMANDE ?
+------------------------------------------------------------------------
+Double-cliquez simplement sur le fichier texte dans Google Drive.
+Il contient un résumé structuré et clair :
+- Référence de la commande et Date
+- Produit acheté, Prix total, Acompte de 60% à réclamer
+- Coordonnées complètes du client (Nom, Téléphone, Adresse)
+
+Grâce à cela, l'atelier a une trace écrite et sauvegardée de chaque 
+commande, en complément du message WhatsApp reçu par le service client !
+
+========================================================================

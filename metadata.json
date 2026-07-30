@@ -1,0 +1,8 @@
+{
+  "name": "EMROD SARL - Mobilier sur Mesure",
+  "description": "A high-end, full-stack, custom furniture eCommerce platform with Google Drive integration for dynamic inventory, gallery, and lead management. Includes a 24/7 AI chatbot.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

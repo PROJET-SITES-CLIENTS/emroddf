@@ -1,0 +1,41 @@
+========================================================================
+        EMROD SARL — MODE D'EMPLOI : 04 - LES PROSPECTS (LEADS)
+========================================================================
+
+Ce document explique comment gérer les contacts des clients potentiels 
+(prospects) qui demandent des informations sur le site.
+
+------------------------------------------------------------------------
+D'OÙ VIENNENT LES PROSPECTS ?
+------------------------------------------------------------------------
+Sur le site, il y a deux manières pour un prospect de s'inscrire :
+1. Le Pop-up automatique (qui s'affiche après quelques secondes) où
+   le visiteur peut entrer son nom, numéro et ce qu'il recherche.
+2. Le Formulaire de contact classique (page Contact).
+
+------------------------------------------------------------------------
+QUE SE PASSE-T-IL QUAND ILS VALIDENT ?
+------------------------------------------------------------------------
+Exactement comme pour les commandes, l'inscription d'un prospect déclenche
+deux actions automatiques :
+1. Le client est redirigé vers votre WhatsApp avec un message d'approche.
+2. Une Fiche Prospect (.txt) est automatiquement créée dans votre Drive.
+
+------------------------------------------------------------------------
+OÙ TROUVER LES FICHES PROSPECTS ?
+------------------------------------------------------------------------
+1. Ouvrez votre Google Drive.
+2. Allez dans le dossier "Prospects" 
+   (ID: 1bOVDe5nRZStmn0AFD041m6MKoejAppEy).
+3. Vous y trouverez des fichiers texte nommés sous le format :
+   "Lead_NomDuClient_1730000000.txt"
+
+------------------------------------------------------------------------
+POURQUOI C'EST UTILE ?
+------------------------------------------------------------------------
+Conservez ces fiches précieusement. Elles constituent votre "Base de données
+clients". Même si un prospect n'achète pas immédiatement sur WhatsApp, 
+vous avez ses coordonnées et ce qu'il recherchait bien au chaud dans votre 
+Drive pour pouvoir le recontacter (campagnes de relance, promotions, etc.).
+
+========================================================================
