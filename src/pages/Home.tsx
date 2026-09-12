@@ -1,7 +1,7 @@
 import { motion, useScroll, useTransform, Variants, AnimatePresence } from "motion/react";
 import { Link } from "react-router-dom";
 import { Star, CheckCircle, ShieldCheck, Gem, ArrowRight, Quote, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
-import { fetchGalleryImages, GalleryImage, fetchCatalogUrl } from "../lib/api";
+import { fetchCatalogUrl, fetchSettings, type SiteSettings } from "../lib/api";
 import { useRef, useState, useEffect } from "react";
 import heroBg from "../assets/images/hero-bg.jpg";
 import aboutArtisan from "../assets/images/about-artisan.jpg";
@@ -88,23 +88,26 @@ function SparkleParticle({ delay, x, y, size }: { delay: number; x: string; y: s
 }
 
 /* ── Testimonial Carousel ───────────────── */
-const testimonials = [
+type Testimonial = { text: string; author: string; role: string };
+
+const FALLBACK_TESTIMONIALS: Testimonial[] = [
   { text: "Une qualité exceptionnelle. La table à manger dessinée pour notre loft est devenue la pièce maîtresse absolue. Un travail remarquable sur les joints et le vernis.", author: "Sophie L.", role: "Architecte d'intérieur" },
   { text: "L'écoute, la patience, et le niveau de détail de la créatrice sont inégalables. Le meuble TV sur-mesure s'intègre parfaitement et cache intelligemment toute la technique.", author: "Marc & Valérie", role: "Clients particuliers" },
   { text: "EMROD a su transformer ma vision en réalité. La bibliothèque sur-mesure occupe toute la hauteur sous plafond avec une précision au millimètre. Impressionnant.", author: "Jean-Paul M.", role: "Entrepreneur" },
 ];
 
-function TestimonialCarousel() {
+function TestimonialCarousel({ testimonials }: { testimonials: Testimonial[] }) {
   const [current, setCurrent] = useState(0);
   const [direction, setDirection] = useState(1);
+  const total = Math.max(testimonials.length, 1);
 
   useEffect(() => {
     const timer = setInterval(() => {
       setDirection(1);
-      setCurrent((c) => (c + 1) % testimonials.length);
+      setCurrent((c) => (c + 1) % total);
     }, 5000);
     return () => clearInterval(timer);
-  }, []);
+  }, [total]);
 
   const go = (idx: number) => {
     setDirection(idx > current ? 1 : -1);
@@ -117,7 +120,7 @@ function TestimonialCarousel() {
     exit: (dir: number) => ({ opacity: 0, x: dir > 0 ? -100 : 100, scale: 0.92, rotateY: dir > 0 ? -8 : 8, transition: { duration: 0.5 } }),
   };
 
-  const t = testimonials[current];
+  const t = testimonials[current] || FALLBACK_TESTIMONIALS[0];
 
   return (
     <div className="relative" style={{ perspective: "1200px" }}>
@@ -230,12 +233,36 @@ export default function Home() {
   const yText = useTransform(scrollYProgress, [0, 1], ["0%", "15%"]);
   const scaleImage = useTransform(scrollYProgress, [0, 1], [1, 1.15]);
 
-  const heroImages = [
-    "/hero-new.jpg",
-    "/gallery/IMG-20260531-WA0038.jpg",
-    "/gallery/IMG-20260531-WA0040.jpg",
-    "/gallery/IMG-20260531-WA0062.jpg"
+  // ── Contenus pilotés depuis le tableau de bord ──────────────────
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
+  useEffect(() => {
+    fetchSettings().then(setSettings).catch(console.error);
+  }, []);
+
+  const DEFAULT_HERO = ["/hero-new.jpg", "/gallery/IMG-20260531-WA0038.jpg", "/gallery/IMG-20260531-WA0040.jpg", "/gallery/IMG-20260531-WA0062.jpg"];
+  const heroImages = settings?.home?.heroImages?.length ? settings.home.heroImages : DEFAULT_HERO;
+  const marqueeWords = settings?.home?.marquee?.length ? settings.home.marquee : ["Bois Nobles de Guinée", "Savoir-Faire", "Haute Couture", "Finition Main", "Éthique & Durabilité", "Sur-Mesure", "Excellence"];
+  const stats = settings?.home?.stats?.length ? settings.home.stats : [
+    { value: 5, suffix: "+", label: "Ans d'Expertise" },
+    { value: 200, suffix: "+", label: "Projets Livrés" },
+    { value: 100, suffix: "%", label: "Sur-Mesure" },
+    { value: 48, suffix: "h", label: "Délai de réponse" },
   ];
+  const values = settings?.home?.values?.length ? settings.home.values : [
+    { title: "Matériaux Nobles", text: "Nous sélectionnons scrupuleusement nos chênes, noyers, cuirs pleine fleur, et métaux texturés auprès de fournisseurs éthiques, pour un rendu incomparable." },
+    { title: "Finition Haute Couture", text: "L'ajustement au millimètre. Nos vernis et huiles naturelles sont appliqués à la main pour révéler la beauté singulière de chaque veinure." },
+    { title: "Durabilité Absolue", text: "Nous ne créons pas de meubles jetables. Nos créations sont des héritages conçus pour traverser les décennies et résister aux aléas du temps." },
+  ];
+  const signatureParagraphs = settings?.home?.signatureParagraphs?.length
+    ? settings.home.signatureParagraphs
+    : [
+        "Vous êtes au centre de chaque création. Nous sélectionnons soigneusement chaque pièce de bois pour concevoir avec vous des meubles robustes, esthétiques et parfaitement adaptés à votre style de vie.",
+        "Chaque pièce est le fruit d'un travail manuel minutieux, pensée pour dépasser vos attentes et magnifier votre intérieur.",
+      ];
+  const DEFAULT_REALISATIONS = ["IMG-20260531-WA0035.jpg", "IMG-20260531-WA0079.jpg", "IMG-20260531-WA0040.jpg", "IMG-20260531-WA0051.jpg", "IMG-20260531-WA0042.jpg", "IMG-20260531-WA0088.jpg", "IMG-20260531-WA0038.jpg", "IMG-20260524-WA0011.jpg", "IMG-20260531-WA0062.jpg"];
+  const realisations = (settings?.home?.realisations?.length ? settings.home.realisations : DEFAULT_REALISATIONS.map((f) => `/gallery/${f}`));
+  const testimonials = settings?.testimonials?.length ? settings.testimonials : FALLBACK_TESTIMONIALS;
+
   const [currentHeroSlide, setCurrentHeroSlide] = useState(0);
 
   useEffect(() => {
@@ -298,20 +325,20 @@ export default function Home() {
               <motion.div variants={fadeUp} className="inline-flex items-center justify-center gap-2.5 px-6 py-3 mb-10 relative bg-black/20 backdrop-blur-md rounded-sm border border-white/20">
                 <span className="w-2 h-2 rounded-sm bg-accent animate-pulse" />
                 <span className="text-[10px] sm:text-xs uppercase tracking-[0.3em] font-medium text-white">
-                  Sur mesure / Fait par des femmes
+                  {settings?.home?.badge || "Sur mesure / Fait par des femmes"}
                 </span>
               </motion.div>
 
               {/* Title */}
               <motion.div variants={fadeUp} className="mb-8 w-full">
                 <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl leading-[1.05] tracking-tight font-heading font-light text-white">
-                  <span className="block mb-2">Des meubles uniques,</span>
-                  <span className="text-accent italic font-normal text-gradient-animated block">sur mesure.</span>
+                  <span className="block mb-2">{settings?.home?.title1 || "Des meubles uniques,"}</span>
+                  <span className="text-accent italic font-normal text-gradient-animated block">{settings?.home?.title2 || "sur mesure."}</span>
                 </h1>
               </motion.div>
 
               <motion.p variants={fadeUp} className="text-lg md:text-xl lg:text-2xl text-white/85 mb-12 max-w-2xl leading-relaxed tracking-wide font-light">
-                Créés par des femmes pour votre intérieur. Nous créons des meubles solides et beaux, en mélangeant le travail à la main et des idées modernes.
+                {settings?.home?.subtitle || "Créés par des femmes pour votre intérieur. Nous créons des meubles solides et beaux, en mélangeant le travail à la main et des idées modernes."}
               </motion.p>
 
               {/* CTAs */}
@@ -333,7 +360,7 @@ export default function Home() {
                     }}
                     className="ripple-btn shimmer-sweep w-full inline-flex items-center justify-center px-10 py-5 bg-primary text-white tracking-[0.2em] uppercase text-xs font-bold transition-all hover:shadow-[0_0_30px_rgba(17,82,47,0.6)] rounded-sm border border-primary"
                   >
-                    Découvrir le catalogue
+                    {settings?.home?.cta1Label || "Découvrir le catalogue"}
                     <ArrowRight className="w-4 h-4 ml-3" />
                   </button>
                 </motion.div>
@@ -342,7 +369,7 @@ export default function Home() {
                     to="/contact"
                     className="w-full inline-flex items-center justify-center px-10 py-5 border border-white/40 bg-black/30 backdrop-blur-md text-white hover:border-accent hover:text-accent hover:bg-black/50 tracking-[0.2em] uppercase text-xs font-bold transition-all rounded-sm shadow-xl"
                   >
-                    Création Sur-Mesure
+                    {settings?.home?.cta2Label || "Création Sur-Mesure"}
                   </Link>
                 </motion.div>
               </motion.div>
@@ -382,22 +409,22 @@ export default function Home() {
         
         <div className="flex whitespace-nowrap">
           <div className="animate-marquee flex gap-0 flex-shrink-0">
-            {['Bois Nobles de Guinée', '✦', 'Savoir-Faire', '✦', 'Haute Couture', '✦', 'Finition Main', '✦', 'Éthique & Durabilité', '✦', 'Sur-Mesure', '✦', 'Excellence', '✦', 'Bois Nobles de Guinée', '✦', 'Savoir-Faire', '✦', 'Haute Couture', '✦', 'Finition Main', '✦', 'Éthique & Durabilité', '✦', 'Sur-Mesure', '✦', 'Excellence', '✦'].map((brand, i) => (
+            {[...marqueeWords, ...marqueeWords].map((brand, i) => (
               <span
-                key={i}
-                className={`font-heading text-xl font-medium tracking-wider px-8 transition-colors ${brand === '✦' ? 'text-accent text-base animate-pulse' : 'text-foreground/40'}`}
+                key={`a-${i}`}
+                className={`font-heading text-xl font-medium tracking-wider px-8 transition-colors ${i % 2 === 1 ? 'text-accent text-base animate-pulse' : 'text-foreground/40'}`}
               >
-                {brand}
+                {i % 2 === 1 ? '✦' : brand}
               </span>
             ))}
           </div>
           <div className="animate-marquee flex gap-0 flex-shrink-0" aria-hidden>
-            {['Bois Nobles de Guinée', '✦', 'Savoir-Faire', '✦', 'Haute Couture', '✦', 'Finition Main', '✦', 'Éthique & Durabilité', '✦', 'Sur-Mesure', '✦', 'Excellence', '✦', 'Bois Nobles de Guinée', '✦', 'Savoir-Faire', '✦', 'Haute Couture', '✦', 'Finition Main', '✦', 'Éthique & Durabilité', '✦', 'Sur-Mesure', '✦', 'Excellence', '✦'].map((brand, i) => (
+            {[...marqueeWords, ...marqueeWords].map((brand, i) => (
               <span
-                key={i}
-                className={`font-heading text-xl font-medium tracking-wider px-8 ${brand === '✦' ? 'text-accent text-base animate-pulse' : 'text-foreground/40'}`}
+                key={`b-${i}`}
+                className={`font-heading text-xl font-medium tracking-wider px-8 ${i % 2 === 1 ? 'text-accent text-base animate-pulse' : 'text-foreground/40'}`}
               >
-                {brand}
+                {i % 2 === 1 ? '✦' : brand}
               </span>
             ))}
           </div>
@@ -433,9 +460,9 @@ export default function Home() {
 
           <div className="grid md:grid-cols-3 gap-6">
             {[
-              { icon: Gem, title: "Matériaux Nobles", text: "Nous sélectionnons scrupuleusement nos chênes, noyers, cuirs pleine fleur, et métaux texturés auprès de fournisseurs éthiques, pour un rendu incomparable.", num: "01", color: "#e85d04" },
-              { icon: CheckCircle, title: "Finition Haute Couture", text: "L'ajustement au millimètre. Nos vernis et huiles naturelles sont appliqués à la main pour révéler la beauté singulière de chaque veinure.", num: "02", color: "#e85d04" },
-              { icon: ShieldCheck, title: "Durabilité Absolue", text: "Nous ne créons pas de meubles jetables. Nos créations sont des héritages conçus pour traverser les décennies et résister aux aléas du temps.", num: "03", color: "#154c30" },
+              { icon: Gem, ...values[0], num: "01", color: "#e85d04" },
+              { icon: CheckCircle, ...values[1], num: "02", color: "#e85d04" },
+              { icon: ShieldCheck, ...values[2], num: "03", color: "#154c30" },
             ].map((item, i) => (
               <motion.div
                 key={i}
@@ -498,12 +525,7 @@ export default function Home() {
 
         <div className="container mx-auto max-w-7xl px-6 md:px-12">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {[
-              { value: 5, suffix: "+", label: "Ans d'Expertise" },
-              { value: 200, suffix: "+", label: "Projets Livrés" },
-              { value: 100, suffix: "%", label: "Sur-Mesure" },
-              { value: 48, suffix: "h", label: "Délai de réponse" },
-            ].map((stat, i) => (
+            {stats.map((stat, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 40, scale: 0.9 }}
@@ -610,8 +632,9 @@ export default function Home() {
                 <span className="italic font-light text-gradient-animated">qualité.</span>
               </h2>
               <div className="space-y-6 text-lg leading-relaxed mb-12" style={{ color: "rgba(255,255,255,0.65)" }}>
-                <p>Vous êtes au centre de chaque création. Nous sélectionnons soigneusement chaque pièce de bois pour concevoir avec vous des meubles robustes, esthétiques et parfaitement adaptés à votre style de vie.</p>
-                <p>Chaque pièce est le fruit d'un travail manuel minutieux, pensée pour dépasser vos attentes et magnifier votre intérieur.</p>
+                {signatureParagraphs.map((p, i) => (
+                  <p key={i}>{p}</p>
+                ))}
               </div>
 
               {/* Mini stats inline — Enhanced */}
@@ -664,11 +687,7 @@ export default function Home() {
           </motion.div>
 
           <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6">
-            {[
-              "IMG-20260531-WA0035.jpg", "IMG-20260531-WA0079.jpg", "IMG-20260531-WA0040.jpg",
-              "IMG-20260531-WA0051.jpg", "IMG-20260531-WA0042.jpg", "IMG-20260531-WA0088.jpg",
-              "IMG-20260531-WA0038.jpg", "IMG-20260524-WA0011.jpg", "IMG-20260531-WA0062.jpg"
-            ].map((img, i) => (
+            {realisations.map((src, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 40, scale: 0.95 }}
@@ -678,7 +697,7 @@ export default function Home() {
                 whileHover={{ scale: 1.02, rotate: i % 2 === 0 ? 1 : -1 }}
                 className="relative overflow-hidden group cursor-pointer border border-border/30"
               >
-                <img src={`/gallery/${img}`} alt="Réalisation EMROD" className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-110" />
+                <img src={src} alt="Réalisation EMROD" className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-110" />
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center backdrop-blur-sm" style={{ background: "rgba(21, 76, 48, 0.4)" }}>
                   <span className="text-white font-heading text-xl font-light italic opacity-0 group-hover:opacity-100 transition-opacity delay-100 duration-500 translate-y-4 group-hover:translate-y-0">Découvrir</span>
                 </div>
@@ -722,7 +741,7 @@ export default function Home() {
             transition={{ duration: 0.8, delay: 0.2 }}
             className="max-w-3xl mx-auto"
           >
-            <TestimonialCarousel />
+            <TestimonialCarousel testimonials={testimonials} />
           </motion.div>
         </div>
       </section>

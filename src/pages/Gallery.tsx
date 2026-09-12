@@ -1,17 +1,23 @@
 import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence, useScroll, useTransform } from "motion/react";
 import { X, ZoomIn, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
-import { fetchGalleryImages, fetchGalleryVideos, getImageUrl, type GalleryImage as DriveFile } from "../lib/api";
+import { fetchGalleryImages, fetchGalleryVideos, type GalleryMedia } from "../lib/api";
 
 import detailWood from "../assets/images/detail-wood.jpg";
 
+// Une vidéo est lue en <video> si l'URL pointe vers un fichier (mp4/webm/blob),
+// sinon en iframe (embed externe type YouTube / Drive)
+function isVideoFile(url: string): boolean {
+  return /\.(mp4|webm|mov)(\?|$)/i.test(url) || url.includes('.blob.');
+}
+
 export default function Gallery() {
   const [activeTab, setActiveTab] = useState<'images' | 'videos'>('images');
-  const [images, setImages] = useState<DriveFile[]>([]);
-  const [videos, setVideos] = useState<DriveFile[]>([]);
+  const [images, setImages] = useState<GalleryMedia[]>([]);
+  const [videos, setVideos] = useState<GalleryMedia[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedImage, setSelectedImage] = useState<DriveFile | null>(null);
+  const [selectedImage, setSelectedImage] = useState<GalleryMedia | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const touchStartX = useRef(0);
 
@@ -35,7 +41,7 @@ export default function Gallery() {
 
   const currentItems = activeTab === 'images' ? images : videos;
 
-  const openImage = (img: DriveFile, index: number) => {
+  const openImage = (img: GalleryMedia, index: number) => {
     setSelectedImage(img);
     setSelectedIndex(index);
   };
@@ -175,12 +181,22 @@ export default function Gallery() {
                 className="relative group cursor-pointer overflow-hidden break-inside-avoid shadow-sm hover:shadow-2xl transition-all duration-700 bg-card border border-border/50 image-shine hover-lift rounded-sm"
                 onClick={() => openImage(img, i)}
               >
-                <img
-                  src={getImageUrl(img.id)}
-                  alt={img.name}
-                  className="w-full h-auto max-h-[70vh] object-cover group-hover:scale-110 transition-transform duration-1000 ease-[0.25,0.46,0.45,0.94]"
-                  loading="lazy"
-                />
+                {img.media_type === 'video' ? (
+                  <video
+                    src={img.url}
+                    muted
+                    playsInline
+                    preload="metadata"
+                    className="w-full h-auto max-h-[70vh] object-cover group-hover:scale-110 transition-transform duration-1000 ease-[0.25,0.46,0.45,0.94]"
+                  />
+                ) : (
+                  <img
+                    src={img.url}
+                    alt={img.title || "Réalisation EMROD"}
+                    className="w-full h-auto max-h-[70vh] object-cover group-hover:scale-110 transition-transform duration-1000 ease-[0.25,0.46,0.45,0.94]"
+                    loading="lazy"
+                  />
+                )}
 
                 {/* Overlay with animated gradient & icon */}
                 <div
@@ -192,7 +208,7 @@ export default function Gallery() {
                     whileHover={{ scale: 1.1, rotate: 0 }}
                     className="bg-white/10 backdrop-blur-md text-white p-5 rounded-sm border border-white/20 transform scale-0 group-hover:scale-100 transition-all duration-500 delay-100"
                   >
-                    {img.mimeType?.includes('video') ? (
+                    {img.media_type === 'video' ? (
                       <div className="w-6 h-6 flex items-center justify-center text-xl">▶</div>
                     ) : (
                       <ZoomIn className="w-6 h-6" />
@@ -200,7 +216,7 @@ export default function Gallery() {
                   </motion.div>
                   <div className="overflow-hidden">
                     <p className="text-white text-[10px] uppercase tracking-[0.2em] font-medium px-4 text-center line-clamp-1 translate-y-full group-hover:translate-y-0 transition-transform duration-500 delay-200">
-                      {img.name.replace(/\.[^/.]+$/, "")}
+                      {img.title || "Réalisation EMROD"}
                     </p>
                   </div>
                 </div>
@@ -249,7 +265,7 @@ export default function Gallery() {
                   {selectedIndex + 1} <span className="mx-1 opacity-50">/</span> {currentItems.length}
                 </span>
                 <div className="font-heading text-white/90 text-xl md:text-2xl hidden md:block">
-                  {selectedImage.name.replace(/\.[^/.]+$/, "")}
+                  {selectedImage.title || "Réalisation EMROD"}
                 </div>
               </div>
               <button
@@ -263,7 +279,7 @@ export default function Gallery() {
             {/* Mobile title */}
             <div className="absolute bottom-20 left-0 w-full text-center z-30 md:hidden px-6">
               <div className="font-heading text-white/90 text-lg line-clamp-1">
-                {selectedImage.name.replace(/\.[^/.]+$/, "")}
+                {selectedImage.title || "Réalisation EMROD"}
               </div>
             </div>
 
@@ -301,16 +317,27 @@ export default function Gallery() {
                 transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
                 className="relative w-full max-w-7xl max-h-[85vh] flex items-center justify-center px-6 md:px-32 z-20"
               >
-                {selectedImage.mimeType?.includes('video') ? (
-                  <iframe
-                    src={`https://drive.google.com/file/d/${selectedImage.id}/preview`}
-                    className="w-[90vw] md:w-[70vw] h-[60vh] max-h-[85vh] shadow-2xl border border-white/5 rounded-sm bg-black"
-                    allow="autoplay; fullscreen"
-                  />
+                {selectedImage.media_type === 'video' ? (
+                  isVideoFile(selectedImage.url) ? (
+                    <video
+                      src={selectedImage.url}
+                      controls
+                      autoPlay
+                      playsInline
+                      className="max-w-full max-h-[85vh] object-contain shadow-2xl border border-white/5 bg-black"
+                      style={{ boxShadow: "0 20px 80px rgba(0,0,0,0.5), 0 0 100px rgba(232,93,4,0.08)" }}
+                    />
+                  ) : (
+                    <iframe
+                      src={selectedImage.url}
+                      className="w-[90vw] md:w-[70vw] h-[60vh] max-h-[85vh] shadow-2xl border border-white/5 rounded-sm bg-black"
+                      allow="autoplay; fullscreen"
+                    />
+                  )
                 ) : (
                   <img
-                    src={getImageUrl(selectedImage.id)}
-                    alt={selectedImage.name}
+                    src={selectedImage.url}
+                    alt={selectedImage.title || "Réalisation EMROD"}
                     className="max-w-full max-h-[85vh] object-contain shadow-2xl border border-white/5"
                     style={{ boxShadow: "0 20px 80px rgba(0,0,0,0.5), 0 0 100px rgba(232,93,4,0.08)" }}
                   />

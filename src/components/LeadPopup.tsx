@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { X, ArrowRight, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import popupBg from "../assets/images/popup-bg.jpg";
-import { submitLead, fetchCatalogUrl } from "../lib/api";
+import { submitLead } from "../lib/api";
 
 export default function LeadPopup() {
   const [isOpen, setIsOpen] = useState(false);
@@ -50,12 +50,14 @@ export default function LeadPopup() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await submitLead({ ...formData, type: "popup" });
+      // Pot de miel anti-spam : champ caché que seuls les robots remplissent
+      const honeypot = (document.getElementById("popup-website") as HTMLInputElement)?.value || "";
+      await submitLead({ ...formData, source: "popup", website: honeypot });
       const messageText = `Bonjour EMROD, je suis ${formData.firstName}. J'aimerais des informations pour : ${formData.serviceType}. Mon numéro est le ${formData.phone}.`;
       const waLink = `https://wa.me/224623885959?text=${encodeURIComponent(messageText)}`;
-      
+
       window.open(waLink, "_blank");
-      
+
       setHasSubmitted(true);
       setTimeout(closePopup, 3000);
     } catch (err) {
@@ -156,6 +158,8 @@ export default function LeadPopup() {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
+                {/* Pot de miel anti-spam (invisible pour les humains) */}
+                <input type="text" id="popup-website" name="website" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />
                 <div className="grid grid-cols-2 gap-5">
                   <FloatingInput id="popup-firstName" label="Votre Nom" value={formData.firstName} onChange={(v: string) => setFormData({...formData, firstName: v})} />
                   <FloatingInput id="popup-phone" label="Téléphone" type="tel" value={formData.phone} onChange={(v: string) => setFormData({...formData, phone: v})} />

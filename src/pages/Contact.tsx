@@ -1,8 +1,8 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Mail, MapPin, Phone, Clock, Send, CheckCircle2, ChevronDown, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import contactBg from "../assets/images/contact-bg.jpg";
-import { submitLead } from "../lib/api";
+import { submitLead, fetchSettings, type SiteSettings } from "../lib/api";
 
 /* ── Floating label input ───────────────── */
 function FloatingInput({
@@ -156,6 +156,14 @@ export default function Contact() {
   const [success, setSuccess] = useState(false);
   const btnRef = useRef<HTMLButtonElement>(null);
   const [selectFocused, setSelectFocused] = useState(false);
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
+
+  useEffect(() => {
+    fetchSettings().then(setSettings).catch(console.error);
+  }, []);
+
+  const contact = settings?.contact;
+  const whatsappNumber = contact?.whatsapp || "224623885959";
 
   const handleRipple = (e: React.MouseEvent<HTMLButtonElement>) => {
     const btn = e.currentTarget;
@@ -181,10 +189,12 @@ export default function Contact() {
     }, 50);
 
     try {
-      await submitLead({ ...formData, type: "contact_page" });
-      
+      // Pot de miel anti-spam : champ caché que seuls les robots remplissent
+      const honeypot = (document.getElementById("contact-website") as HTMLInputElement)?.value || "";
+      await submitLead({ ...formData, source: "contact_page", website: honeypot });
+
       const messageText = `Bonjour EMROD, je suis ${formData.firstName} ${formData.lastName}. Mon besoin : ${formData.serviceType}. Détails : ${formData.message}`;
-      const waLink = `https://wa.me/224623885959?text=${encodeURIComponent(messageText)}`;
+      const waLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(messageText)}`;
       
       window.open(waLink, "_blank");
       
@@ -199,12 +209,7 @@ export default function Contact() {
     }
   };
 
-  const faqs = [
-    { q: "Quels sont les délais de fabrication ?", a: "Les délais varient entre 4 et 8 semaines selon la complexité de la pièce et le carnet de commandes actuel de l'atelier EMROD. Nous vous communiquons un délai précis lors du devis." },
-    { q: "Proposez-vous des facilités de paiement ?", a: "Un acompte de 50% est demandé à la commande, et le solde de 50% restant est à régler lors de la livraison. Des modalités particulières peuvent être étudiées selon le projet." },
-    { q: "Livrez-vous à Conakry et à l'intérieur du pays ?", a: "Oui, nous organisons la livraison sur tout Conakry et pouvons étudier des solutions logistiques sécurisées vers les autres préfectures de la Guinée." },
-    { q: "Peut-on visiter l'atelier avant de commander ?", a: "Absolument ! Nous encourageons même les visites. Prendre rendez-vous vous permettra de voir nos matériaux, nos finitions en cours et de discuter directement avec la créatrice." },
-  ];
+  const faqs = settings?.faqContact || [];
 
   return (
     <div className="bg-transparent text-foreground pt-24 pb-20 overflow-hidden relative">
@@ -262,10 +267,10 @@ export default function Contact() {
               
               <ul className="space-y-6 relative z-10">
                 {[
-                  { icon: MapPin, label: "Adresse", content: "T7, Corniche Nord\nvirage du lac Sonfonia Centre\n(Carrefour Canal Plus)\nConakry, Guinée" },
-                  { icon: Phone, label: "Téléphones", content: "+224 623 88 59 59\n+224 621 08 41 46" },
-                  { icon: Mail, label: "Email", content: "contact@emroddf.com\ndirection@emroddf.com" },
-                  { icon: Clock, label: "Horaires", content: "Lundi - Samedi: 8h - 18h" },
+                  { icon: MapPin, label: "Adresse", content: contact?.address || "T7, Corniche Nord\nvirage du lac Sonfonia Centre\n(Carrefour Canal Plus)\nConakry, Guinée" },
+                  { icon: Phone, label: "Téléphones", content: (contact?.phones || ["+224 623 88 59 59", "+224 621 08 41 46"]).join("\n") },
+                  { icon: Mail, label: "Email", content: (contact?.emails || ["contact@emroddf.com", "direction@emroddf.com"]).join("\n") },
+                  { icon: Clock, label: "Horaires", content: contact?.hours || "Lundi - Samedi: 8h - 18h" },
                 ].map(({ icon: Icon, label, content }, i) => (
                   <motion.li
                     key={label}
@@ -352,9 +357,11 @@ export default function Contact() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    onSubmit={handleSubmit} 
+                    onSubmit={handleSubmit}
                     className="space-y-6 relative z-10"
                   >
+                    {/* Pot de miel anti-spam (invisible pour les humains) */}
+                    <input type="text" id="contact-website" name="website" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />
                     <div className="grid md:grid-cols-2 gap-6">
                       <FloatingInput id="contact-firstName" label="Prénom" value={formData.firstName} onChange={(v) => setFormData({ ...formData, firstName: v })} required />
                       <FloatingInput id="contact-lastName" label="Nom" value={formData.lastName} onChange={(v) => setFormData({ ...formData, lastName: v })} required />

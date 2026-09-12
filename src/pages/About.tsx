@@ -5,6 +5,8 @@ import detailWood from "../assets/images/detail-wood.jpg";
 import aboutWood from "../assets/images/about-wood.jpg";
 import heroBg2 from "../assets/images/hero-bg-2.jpg";
 import { Truck } from "lucide-react";
+import { useState, useEffect } from "react";
+import { fetchSettings, type SiteSettings } from "../lib/api";
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 40, filter: "blur(6px)" },
@@ -19,14 +21,40 @@ const wordReveal: Variants = {
   })
 };
 
-const steps = [
-  { step: "01", icon: Heart, title: "Choix du matériel", desc: "Le choix du matériel se fait en commun accord avec le client (notamment sur la partie matériaux nobles).", color: "#e85d04" },
-  { step: "02", icon: Ruler, title: "Validation du design", desc: "Nous réalisons des croquis et des plans détaillés. La validation du design se fait en accord avec le client avant de lancer la production.", color: "#e85d04" },
-  { step: "03", icon: Hammer, title: "Façonnage, Finitions et Durabilité", desc: "Nous fabriquons votre meuble avec des techniques modernes (découpe de précision, assemblage optimisé). Nous appliquons ensuite les vernis et huiles de finition à la main pour garantir une grande durabilité.", color: "#154c30" },
-  { step: "04", icon: Truck, title: "Livraison et Montage", desc: "L'installation se fait directement chez vous par notre équipe, garantissant un ajustement parfait et une durabilité maximale du meuble.", color: "#e85d04" },
+// Icônes/couleurs par défaut des étapes (titres et textes pilotés via le tableau de bord)
+const STEP_ICONS = [Heart, Ruler, Hammer, Truck];
+const STEP_COLORS = ["#e85d04", "#e85d04", "#154c30", "#e85d04"];
+
+const DEFAULT_STEPS = [
+  { step: "01", title: "Choix du matériel", desc: "Le choix du matériel se fait en commun accord avec le client (notamment sur la partie matériaux nobles)." },
+  { step: "02", title: "Validation du design", desc: "Nous réalisons des croquis et des plans détaillés. La validation du design se fait en accord avec le client avant de lancer la production." },
+  { step: "03", title: "Façonnage, Finitions et Durabilité", desc: "Nous fabriquons votre meuble avec des techniques modernes (découpe de précision, assemblage optimisé). Nous appliquons ensuite les vernis et huiles de finition à la main pour garantir une grande durabilité." },
+  { step: "04", title: "Livraison et Montage", desc: "L'installation se fait directement chez vous par notre équipe, garantissant un ajustement parfait et une durabilité maximale du meuble." },
 ];
 
 export default function About() {
+  // Contenus pilotés depuis le tableau de bord administrateur
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
+  useEffect(() => {
+    fetchSettings().then(setSettings).catch(console.error);
+  }, []);
+
+  const about = settings?.about;
+  const paragraphs = about?.paragraphs?.length
+    ? about.paragraphs
+    : [
+        "L'aventure EMROD a commencé par une véritable passion pour le travail du bois et l'aménagement d'intérieur. Portée par une équipe de femmes talentueuses et déterminées, l'entreprise s'est donnée pour mission de transformer des matériaux nobles en créations uniques et sur mesure.",
+        "Aujourd'hui, notre atelier incarne l'alliance parfaite entre artisanat minutieux et design contemporain. Nous croyons qu'un meuble n'est pas seulement fonctionnel : il reflète votre personnalité, raconte une histoire et donne vie à votre intérieur.",
+      ];
+  const quote =
+    about?.quote ||
+    "Le client est au cœur de tout le projet. Chaque réalisation est pensée et conçue en totale synergie avec vos envies.";
+  const steps = (about?.steps?.length ? about.steps : DEFAULT_STEPS).map((s, i) => ({
+    ...s,
+    step: `0${i + 1}`,
+    icon: STEP_ICONS[i % STEP_ICONS.length],
+    color: STEP_COLORS[i % STEP_COLORS.length],
+  }));
   return (
     <div className="bg-transparent text-foreground pt-24 pb-20 min-h-screen overflow-hidden">
       <div className="container mx-auto max-w-7xl px-6 md:px-12">
@@ -93,17 +121,16 @@ export default function About() {
               <div className="text-xs uppercase tracking-[0.3em] font-medium" style={{ color: "#e85d04" }}>
                 — Notre Histoire
               </div>
-              <p className="text-lg text-foreground/75 leading-relaxed">
-                L'aventure EMROD a commencé par une véritable passion pour le travail du bois et l'aménagement d'intérieur. Portée par une équipe de femmes talentueuses et déterminées, l'entreprise s'est donnée pour mission de transformer des matériaux nobles en créations uniques et sur mesure.
-              </p>
-              <p className="text-lg text-foreground/75 leading-relaxed">
-                Aujourd'hui, notre atelier incarne l'alliance parfaite entre artisanat minutieux et design contemporain. Nous croyons qu'un meuble n'est pas seulement fonctionnel : il reflète votre personnalité, raconte une histoire et donne vie à votre intérieur.
-              </p>
+              {paragraphs.map((p, i) => (
+                <p key={i} className="text-lg text-foreground/75 leading-relaxed">
+                  {p}
+                </p>
+              ))}
 
               {/* Client at the center emphasis */}
               <div className="mt-8 p-6 border-l-2 border-accent relative overflow-hidden">
                 <p className="text-xl italic font-heading text-accent leading-relaxed">
-                  "Le client est au cœur de tout le projet. Chaque réalisation est pensée et conçue en totale synergie avec vos envies."
+                  "{quote}"
                 </p>
               </div>
 

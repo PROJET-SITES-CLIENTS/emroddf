@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { MessageCircle, X, RotateCcw, ChevronRight, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { fetchSettings } from "../lib/api";
 
-const FAQ_DATA = [
+// FAQ par défaut (remplacée par les paramètres du tableau de bord dès chargement)
+const DEFAULT_FAQ = [
   {
     q: "Quels sont vos délais de fabrication ?",
     a: "Nos délais varient généralement entre **4 et 8 semaines** selon la complexité de la pièce. Nous vous communiquons un délai précis lors de l'établissement du devis.",
@@ -10,34 +12,6 @@ const FAQ_DATA = [
   {
     q: "Où êtes-vous situés ?",
     a: "Notre atelier se trouve à **Conakry** : T7, Corniche Nord, virage du lac Sonfonia Centre (Carrefour Canal Plus).",
-  },
-  {
-    q: "Comment passer une commande sur mesure ?",
-    a: "Tout commence par un échange — en ligne ou à l'atelier. Nous écoutons vos besoins, réalisons des croquis, puis établissons un devis. Un **acompte de 50%** est demandé à la commande pour lancer la fabrication.",
-  },
-  {
-    q: "Faites-vous la livraison ?",
-    a: "Oui ! Nous livrons sur **tout Conakry**. Pour l'intérieur du pays, nous étudions des solutions logistiques sécurisées selon votre localisation.",
-  },
-  {
-    q: "Quels matériaux utilisez-vous ?",
-    a: "Nous travaillons avec des **bois locaux et nobles de Guinée**, du métal, du cuir, et des finitions haut de gamme (vernis, huiles naturelles) pour garantir durabilité et élégance.",
-  },
-  {
-    q: "Puis-je personnaliser un modèle existant ?",
-    a: "Absolument ! Tous nos modèles peuvent être **adaptés à vos dimensions**, dans l'essence de bois et la finition de votre choix. Votre vision, notre expertise.",
-  },
-  {
-    q: "Quels sont vos moyens de paiement ?",
-    a: "Nous acceptons les **virements bancaires**, les **chèques**, ainsi que les paiements mobiles via **Orange Money** et **Mobile Money**.",
-  },
-  {
-    q: "Est-il possible de visiter votre atelier ?",
-    a: "Avec grand plaisir ! Nous vous recevons **sur rendez-vous** à notre atelier de Sonfonia pour discuter de votre projet et vous montrer notre savoir-faire en direct.",
-  },
-  {
-    q: "Faites-vous des aménagements pour professionnels ?",
-    a: "Tout à fait. Nous réalisons des aménagements sur mesure pour les professionnels : **bureaux de direction**, comptoirs d'accueil, présentoirs pour boutiques, et bien plus.",
   },
 ];
 
@@ -76,6 +50,7 @@ function formatText(text: string) {
 
 export default function Chatbot() {
   const [isOpen, setIsOpen] = useState(false);
+  const [faqData, setFaqData] = useState(DEFAULT_FAQ);
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
@@ -88,11 +63,20 @@ export default function Chatbot() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const msgId = useRef(1);
 
+  // FAQ pilotée depuis le tableau de bord administrateur
+  useEffect(() => {
+    fetchSettings()
+      .then((s) => {
+        if (Array.isArray(s.faq) && s.faq.length > 0) setFaqData(s.faq);
+      })
+      .catch(() => {/* FAQ par défaut conservée */});
+  }, []);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
 
-  const handleQuestionClick = (faq: (typeof FAQ_DATA)[0]) => {
+  const handleQuestionClick = (faq: { q: string; a: string }) => {
     const userMsg: Message = {
       role: "user",
       content: faq.q,
@@ -310,7 +294,7 @@ export default function Chatbot() {
                     <span className="w-3 h-[1px] bg-accent" /> Questions fréquentes
                   </p>
                   <div className="flex gap-3 overflow-x-auto pb-4 custom-scrollbar snap-x snap-mandatory" style={{ scrollbarWidth: "thin", scrollbarColor: "#e85d04 transparent" }}>
-                    {FAQ_DATA.map((faq, idx) => (
+                    {faqData.map((faq, idx) => (
                       <motion.button
                         key={idx}
                         initial={{ opacity: 0, y: 10 }}

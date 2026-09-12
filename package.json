@@ -7,16 +7,17 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "db:setup": "tsx scripts/setup-db.ts",
+    "migrate:drive": "tsx scripts/migrate-from-drive.ts"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.1.0",
     "@tailwindcss/vite": "^4.1.14",
+    "@vercel/blob": "^2.8.0",
     "@vitejs/plugin-react": "^5.0.4",
     "clsx": "^2.1.1",
     "dotenv": "^17.2.3",
-    "embla-carousel-react": "^8.5.2",
-    "express": "^4.21.2",
-    "googleapis": "^144.0.0",
     "lucide-react": "^0.474.0",
     "motion": "^12.0.6",
     "react": "^19.0.0",
@@ -28,7 +29,6 @@
     "vite": "^6.2.3"
   },
   "devDependencies": {
-    "@types/express": "^4.17.21",
     "@types/node": "^22.10.9",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useScroll, useMotionValue, useSpring } from "motion/react";
 import Chatbot from "../Chatbot";
 import LeadPopup from "../LeadPopup";
+import { fetchSettings, type SiteSettings } from "../../lib/api";
 import logo from "../../assets/images/logo.png";
 
 /* ── Page Transition Component ────────── */
@@ -50,7 +51,25 @@ export default function Layout() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [hoveredNav, setHoveredNav] = useState<string | null>(null);
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
   const location = useLocation();
+
+  // Contenus pilotés depuis le tableau de bord
+  useEffect(() => {
+    fetchSettings()
+      .then((s) => {
+        setSettings(s);
+        // SEO piloté depuis le tableau de bord
+        if (s?.seo?.title) document.title = s.seo.title;
+        if (s?.seo?.description) {
+          document.querySelector('meta[name="description"]')?.setAttribute('content', s.seo.description);
+        }
+      })
+      .catch(console.error);
+  }, []);
+
+  const partners = settings?.partners?.length ? settings.partners : ["PARTENAIRE 1", "PARTENAIRE 2", "PARTENAIRE 3", "PARTENAIRE 4"];
+  const contact = settings?.contact;
 
   // Framer Motion for performant scroll progress
   const { scrollYProgress } = useScroll();
@@ -242,11 +261,9 @@ export default function Layout() {
         <div className="container mx-auto px-6 text-center relative z-10">
           <h3 className="font-heading text-2xl md:text-3xl mb-12 text-primary">Ils nous font <span className="italic text-accent">confiance</span></h3>
           <div className="flex flex-wrap justify-center items-center gap-12 md:gap-24 opacity-60 hover:opacity-100 transition-all duration-500">
-            {/* Dummy partner logos for now */}
-            <div className="flex items-center justify-center font-heading text-xl md:text-2xl font-medium tracking-widest text-foreground/50 hover:text-primary transition-colors">PARTENAIRE 1</div>
-            <div className="flex items-center justify-center font-heading text-xl md:text-2xl font-medium tracking-widest text-foreground/50 hover:text-primary transition-colors">PARTENAIRE 2</div>
-            <div className="flex items-center justify-center font-heading text-xl md:text-2xl font-medium tracking-widest text-foreground/50 hover:text-primary transition-colors">PARTENAIRE 3</div>
-            <div className="flex items-center justify-center font-heading text-xl md:text-2xl font-medium tracking-widest text-foreground/50 hover:text-primary transition-colors">PARTENAIRE 4</div>
+            {partners.map((name, i) => (
+              <div key={i} className="flex items-center justify-center font-heading text-xl md:text-2xl font-medium tracking-widest text-foreground/50 hover:text-primary transition-colors">{name}</div>
+            ))}
           </div>
         </div>
       </section>
@@ -307,7 +324,7 @@ export default function Layout() {
             </p>
             {/* Phone links with hover effect */}
             <div className="flex flex-col gap-2">
-              {["+224 623 88 59 59", "+224 621 08 41 46"].map((num) => (
+              {(contact?.phones || ["+224 623 88 59 59", "+224 621 08 41 46"]).map((num) => (
                 <motion.a
                   key={num}
                   href={`tel:${num.replace(/\s/g, "")}`}
@@ -364,20 +381,19 @@ export default function Layout() {
             </h4>
             <ul className="text-sm text-white/55 space-y-4">
               <li className="leading-relaxed">
-                T7, Corniche Nord<br />Virage du lac Sonfonia Centre<br />Conakry, Guinée
+                {(contact?.address || "T7, Corniche Nord\nVirage du lac Sonfonia Centre\nConakry, Guinée").split("\n").map((line, i) => (
+                  <span key={i}>{line}<br /></span>
+                ))}
               </li>
-              <li>
-                <a href="mailto:contact@emroddf.com" className="hover:text-accent transition-colors inline-flex items-center gap-2 group">
-                  <span className="group-hover:translate-x-1 transition-transform duration-300">contact@emroddf.com</span>
-                </a>
-              </li>
-              <li>
-                <a href="mailto:direction@emroddf.com" className="hover:text-accent transition-colors inline-flex items-center gap-2 group">
-                  <span className="group-hover:translate-x-1 transition-transform duration-300">direction@emroddf.com</span>
-                </a>
-              </li>
+              {(contact?.emails || ["contact@emroddf.com", "direction@emroddf.com"]).map((email) => (
+                <li key={email}>
+                  <a href={`mailto:${email}`} className="hover:text-accent transition-colors inline-flex items-center gap-2 group">
+                    <span className="group-hover:translate-x-1 transition-transform duration-300">{email}</span>
+                  </a>
+                </li>
+              ))}
               <li className="text-white/35 text-xs uppercase tracking-[0.2em] pt-4 border-t border-white/8">
-                Lun–Sam · 8h–18h
+                {contact?.hoursShort || "Lun–Sam · 8h–18h"}
               </li>
             </ul>
 

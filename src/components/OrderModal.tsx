@@ -1,11 +1,11 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, ShoppingBag, MessageCircle, CheckCircle, Loader2, Sparkles } from "lucide-react";
-import { submitOrder } from "../lib/api";
 
 interface OrderModalProps {
   isOpen: boolean;
   onClose: () => void;
+  productId: number;
   produit: string;
   prix: string;
   prixNumeric: number;
@@ -52,6 +52,7 @@ const FloatingInput = ({ id, label, type="text", value, onChange, placeholder=""
 export default function OrderModal({
   isOpen,
   onClose,
+  productId,
   produit,
   prix,
   prixNumeric,
@@ -96,22 +97,19 @@ export default function OrderModal({
       const waMessage = `Bonjour EMROD SARL ! 🪑\n\nJe viens de payer mon acompte sur votre site via Djomy.\n\n📋 *MA COMMANDE*\nProduit : ${produit}\nPrix total : ${prix}\nAcompte payé : ${acompte}\n\n👤 *MES COORDONNÉES*\nNom & Prénom : ${formData.nom} ${formData.prenom}\nTéléphone : ${formData.telephone}\nAdresse de livraison : ${formData.adresse}\n\nJe confirme ma commande ! 🙏`;
       localStorage.setItem("emrod_last_order_wa", waMessage);
 
-      // Appel de notre API Serverless pour initier le paiement Djomy
+      // Appel de notre API Serverless pour initier le paiement Djomy.
+      // 🔒 Seul le productId est envoyé : le serveur lit le prix
+      // authentique en base de données.
       const res = await fetch("/api/payment/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          prixTotalNumeric: prixNumeric,
+          productId,
           payerNumber: formData.telephone.replace(/[^0-9]/g, ''),
-          description: `Acompte 60% - ${produit}`,
-          metadata: {
-            nom: formData.nom,
-            prenom: formData.prenom,
-            telephone: formData.telephone,
-            adresse: formData.adresse,
-            produit: produit,
-            prix: prix
-          }
+          nom: formData.nom,
+          prenom: formData.prenom,
+          telephone: formData.telephone,
+          adresse: formData.adresse,
         })
       });
 
@@ -190,7 +188,7 @@ export default function OrderModal({
                       Confirmer ma commande
                     </h2>
                     <p className="text-sm text-foreground/60 leading-relaxed">
-                      Remplissez vos informations. Vous serez redirigé(e) sur WhatsApp pour valider l'acompte.
+                      Remplissez vos informations. Vous serez redirigé(e) vers la page de paiement sécurisée Djomy pour régler l'acompte.
                     </p>
                   </div>
 

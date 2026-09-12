@@ -1,0 +1,173 @@
+{
+  "contact": {
+    "address": "T7, Corniche Nord\nVirage du lac Sonfonia Centre\n(Carrefour Canal Plus)\nConakry, Guinée",
+    "phones": ["+224 623 88 59 59", "+224 621 08 41 46"],
+    "whatsapp": "224623885959",
+    "emails": ["contact@emroddf.com", "direction@emroddf.com"],
+    "hours": "Lundi - Samedi: 8h - 18h",
+    "hoursShort": "Lun–Sam · 8h–18h"
+  },
+  "home": {
+    "badge": "Sur mesure / Fait par des femmes",
+    "title1": "Des meubles uniques,",
+    "title2": "sur mesure.",
+    "subtitle": "Créés par des femmes pour votre intérieur. Nous créons des meubles solides et beaux, en mélangeant le travail à la main et des idées modernes.",
+    "cta1Label": "Découvrir le catalogue",
+    "cta2Label": "Création Sur-Mesure",
+    "heroImages": [
+      "/hero-new.jpg",
+      "/gallery/IMG-20260531-WA0038.jpg",
+      "/gallery/IMG-20260531-WA0040.jpg",
+      "/gallery/IMG-20260531-WA0062.jpg"
+    ],
+    "marquee": [
+      "Bois Nobles de Guinée",
+      "Savoir-Faire",
+      "Haute Couture",
+      "Finition Main",
+      "Éthique & Durabilité",
+      "Sur-Mesure",
+      "Excellence"
+    ],
+    "stats": [
+      { "value": 5, "suffix": "+", "label": "Ans d'Expertise" },
+      { "value": 200, "suffix": "+", "label": "Projets Livrés" },
+      { "value": 100, "suffix": "%", "label": "Sur-Mesure" },
+      { "value": 48, "suffix": "h", "label": "Délai de réponse" }
+    ],
+    "values": [
+      {
+        "title": "Matériaux Nobles",
+        "text": "Nous sélectionnons scrupuleusement nos chênes, noyers, cuirs pleine fleur, et métaux texturés auprès de fournisseurs éthiques, pour un rendu incomparable."
+      },
+      {
+        "title": "Finition Haute Couture",
+        "text": "L'ajustement au millimètre. Nos vernis et huiles naturelles sont appliqués à la main pour révéler la beauté singulière de chaque veinure."
+      },
+      {
+        "title": "Durabilité Absolue",
+        "text": "Nous ne créons pas de meubles jetables. Nos créations sont des héritages conçus pour traverser les décennies et résister aux aléas du temps."
+      }
+    ],
+    "signatureParagraphs": [
+      "Vous êtes au centre de chaque création. Nous sélectionnons soigneusement chaque pièce de bois pour concevoir avec vous des meubles robustes, esthétiques et parfaitement adaptés à votre style de vie.",
+      "Chaque pièce est le fruit d'un travail manuel minutieux, pensée pour dépasser vos attentes et magnifier votre intérieur."
+    ],
+    "realisations": [
+      "/gallery/IMG-20260531-WA0035.jpg",
+      "/gallery/IMG-20260531-WA0079.jpg",
+      "/gallery/IMG-20260531-WA0040.jpg",
+      "/gallery/IMG-20260531-WA0051.jpg",
+      "/gallery/IMG-20260531-WA0042.jpg",
+      "/gallery/IMG-20260531-WA0088.jpg",
+      "/gallery/IMG-20260531-WA0038.jpg",
+      "/gallery/IMG-20260524-WA0011.jpg",
+      "/gallery/IMG-20260531-WA0062.jpg"
+    ]
+  },
+  "testimonials": [
+    {
+      "text": "Une qualité exceptionnelle. La table à manger dessinée pour notre loft est devenue la pièce maîtresse absolue. Un travail remarquable sur les joints et le vernis.",
+      "author": "Sophie L.",
+      "role": "Architecte d'intérieur"
+    },
+    {
+      "text": "L'écoute, la patience, et le niveau de détail de la créatrice sont inégalables. Le meuble TV sur-mesure s'intègre parfaitement et cache intelligemment toute la technique.",
+      "author": "Marc & Valérie",
+      "role": "Clients particuliers"
+    },
+    {
+      "text": "EMROD a su transformer ma vision en réalité. La bibliothèque sur-mesure occupe toute la hauteur sous plafond avec une précision au millimètre. Impressionnant.",
+      "author": "Jean-Paul M.",
+      "role": "Entrepreneur"
+    }
+  ],
+  "partners": ["PARTENAIRE 1", "PARTENAIRE 2", "PARTENAIRE 3", "PARTENAIRE 4"],
+  "faq": [
+    {
+      "q": "Quels sont vos délais de fabrication ?",
+      "a": "Nos délais varient généralement entre **4 et 8 semaines** selon la complexité de la pièce. Nous vous communiquons un délai précis lors de l'établissement du devis."
+    },
+    {
+      "q": "Où êtes-vous situés ?",
+      "a": "Notre atelier se trouve à **Conakry** : T7, Corniche Nord, virage du lac Sonfonia Centre (Carrefour Canal Plus)."
+    },
+    {
+      "q": "Comment passer une commande sur mesure ?",
+      "a": "Tout commence par un échange — en ligne ou à l'atelier. Nous écoutons vos besoins, réalisons des croquis, puis établissons un devis. Un **acompte de 60%** est demandé à la commande pour lancer la fabrication."
+    },
+    {
+      "q": "Faites-vous la livraison ?",
+      "a": "Oui ! Nous livrons sur **tout Conakry**. Pour l'intérieur du pays, nous étudions des solutions logistiques sécurisées selon votre localisation."
+    },
+    {
+      "q": "Quels matériaux utilisez-vous ?",
+      "a": "Nous travaillons avec des **bois locaux et nobles de Guinée**, du métal, du cuir, et des finitions haut de gamme (vernis, huiles naturelles) pour garantir durabilité et élégance."
+    },
+    {
+      "q": "Puis-je personnaliser un modèle existant ?",
+      "a": "Absolument ! Tous nos modèles peuvent être **adaptés à vos dimensions**, dans l'essence de bois et la finition de votre choix. Votre vision, notre expertise."
+    },
+    {
+      "q": "Quels sont vos moyens de paiement ?",
+      "a": "Nous acceptons le **paiement en ligne (Mobile Money via Djomy)**, les **virements bancaires**, les **chèques**, ainsi que **Orange Money** et **Mobile Money**."
+    },
+    {
+      "q": "Est-il possible de visiter votre atelier ?",
+      "a": "Avec grand plaisir ! Nous vous recevons **sur rendez-vous** à notre atelier de Sonfonia pour discuter de votre projet et vous montrer notre savoir-faire en direct."
+    },
+    {
+      "q": "Faites-vous des aménagements pour professionnels ?",
+      "a": "Tout à fait. Nous réalisons des aménagements sur mesure pour les professionnels : **bureaux de direction**, comptoirs d'accueil, présentoirs pour boutiques, et bien plus."
+    }
+  ],
+  "faqContact": [
+    {
+      "q": "Quels sont vos délais de fabrication ?",
+      "a": "Les délais varient entre 4 et 8 semaines selon la complexité de la pièce et le carnet de commandes actuel de l'atelier EMROD. Nous vous communiquons un délai précis lors du devis."
+    },
+    {
+      "q": "Proposez-vous des facilités de paiement ?",
+      "a": "Un acompte de 60% est demandé à la commande (payable en ligne via Mobile Money), et le solde restant est à régler lors de la livraison. Des modalités particulières peuvent être étudiées selon le projet."
+    },
+    {
+      "q": "Livrez-vous à Conakry et à l'intérieur du pays ?",
+      "a": "Oui, nous organisons la livraison sur tout Conakry et pouvons étudier des solutions logistiques sécurisées vers les autres préfectures de la Guinée."
+    },
+    {
+      "q": "Peut-on visiter l'atelier avant de commander ?",
+      "a": "Absolument ! Nous encourageons même les visites. Prendre rendez-vous vous permettra de voir nos matériaux, nos finitions en cours et de discuter directement avec la créatrice."
+    }
+  ],
+  "about": {
+    "paragraphs": [
+      "L'aventure EMROD a commencé par une véritable passion pour le travail du bois et l'aménagement d'intérieur. Portée par une équipe de femmes talentueuses et déterminées, l'entreprise s'est donnée pour mission de transformer des matériaux nobles en créations uniques et sur mesure.",
+      "Aujourd'hui, notre atelier incarne l'alliance parfaite entre artisanat minutieux et design contemporain. Nous croyons qu'un meuble n'est pas seulement fonctionnel : il reflète votre personnalité, raconte une histoire et donne vie à votre intérieur."
+    ],
+    "quote": "Le client est au cœur de tout le projet. Chaque réalisation est pensée et conçue en totale synergie avec vos envies.",
+    "steps": [
+      {
+        "title": "Choix du matériel",
+        "desc": "Le choix du matériel se fait en commun accord avec le client (notamment sur la partie matériaux nobles)."
+      },
+      {
+        "title": "Validation du design",
+        "desc": "Nous réalisons des croquis et des plans détaillés. La validation du design se fait en accord avec le client avant de lancer la production."
+      },
+      {
+        "title": "Façonnage, Finitions et Durabilité",
+        "desc": "Nous fabriquons votre meuble avec des techniques modernes (découpe de précision, assemblage optimisé). Nous appliquons ensuite les vernis et huiles de finition à la main pour garantir une grande durabilité."
+      },
+      {
+        "title": "Livraison et Montage",
+        "desc": "L'installation se fait directement chez vous par notre équipe, garantissant un ajustement parfait et une durabilité maximale du meuble."
+      }
+    ]
+  },
+  "catalogPdf": { "url": "/catalogue_emrod.pdf" },
+  "seo": {
+    "title": "EMROD SARL | Artisanat d'Exception",
+    "description": "EMROD SARL - Création artisanale de mobilier d'exception sur-mesure à Conakry. Menuiserie haut de gamme et aménagement intérieur en Guinée."
+  },
+  "payment": { "depositRate": 0.6 }
+}

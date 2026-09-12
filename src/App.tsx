@@ -13,6 +13,9 @@ const Contact = lazy(() => import("./pages/Contact"));
 const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
 const PaymentCancel = lazy(() => import("./pages/PaymentCancel"));
 
+// Tableau de bord administrateur (bundle séparé, hors site public)
+const AdminApp = lazy(() => import("./admin/AdminApp"));
+
 function PageLoader() {
   return (
     <div className="flex h-[50vh] items-center justify-center">
@@ -31,6 +34,7 @@ export default function App() {
     <BrowserRouter>
       <Suspense fallback={<PageLoader />}>
         <Routes>
+          {/* ── Site public ─────────────────────────── */}
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />
             <Route path="a-propos" element={<About />} />
@@ -41,6 +45,9 @@ export default function App() {
             <Route path="payment/success" element={<PaymentSuccess />} />
             <Route path="payment/cancel" element={<PaymentCancel />} />
           </Route>
+
+          {/* ── Tableau de bord admin ───────────────── */}
+          <Route path="/admin/*" element={<AdminApp />} />
         </Routes>
       </Suspense>
     </BrowserRouter>

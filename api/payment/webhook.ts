@@ -1,7 +1,14 @@
+// ══════════════════════════════════════════════════════════════════
+// POST /api/payment/webhook
+// Webhook Djomy : valide la signature HMAC sur le raw body, puis met
+// à jour la commande correspondante en base (statut + montant payé).
+// Plus aucun appel Google Apps Script.
+// ══════════════════════════════════════════════════════════════════
 import crypto from 'crypto';
+import { db } from '../_lib/db';
 
-// Désactiver le parseur par défaut de Vercel pour récupérer le flux brut (raw body)
-// C'est INDISPENSABLE pour garantir que la signature HMAC ne soit pas altérée par le JSON.parse
+// Désactive le parseur par défaut de Vercel pour lire le flux brut
+// (indispensable : la signature HMAC doit porter sur le corps exact)
 export const config = {
   api: {
     bodyParser: false,
@@ -14,79 +21,95 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
+    // ── 1. Validation de la signature ─────────────────────────────
     const signatureHeader = req.headers['x-webhook-signature'];
     if (!signatureHeader) {
       return res.status(401).json({ error: 'Missing signature' });
     }
 
     const clientSecret = process.env.DJOMY_CLIENT_SECRET;
-    if (!clientSecret) throw new Error("Missing Client Secret");
+    if (!clientSecret) throw new Error('Missing Client Secret');
 
-    // Lecture du flux brut (raw body)
     const chunks = [];
-    for await (const chunk of req) {
-      chunks.push(chunk);
-    }
+    for await (const chunk of req) chunks.push(chunk);
     const rawBody = Buffer.concat(chunks).toString('utf8');
 
-    // Extraction de la signature (Format: "v1:signature")
-    const providedSignature = signatureHeader.replace('v1:', '');
-
-    // Génération de la signature attendue
+    const providedSignature = String(signatureHeader).replace('v1:', '');
     const expectedSignature = crypto.createHmac('sha256', clientSecret).update(rawBody).digest('hex');
 
-    // Validation stricte
-    if (providedSignature !== expectedSignature) {
-      console.error("Signature invalide! Reçue:", providedSignature, "Attendue:", expectedSignature);
+    const a = Buffer.from(providedSignature);
+    const b = Buffer.from(expectedSignature);
+    if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+      console.error('Signature invalide! Reçue:', providedSignature, 'Attendue:', expectedSignature);
       return res.status(403).json({ error: 'Invalid signature' });
     }
 
-    // Le payload est authentique, on le parse maintenant
+    // ── 2. Traitement de l'événement authentifié ─────────────────
     const parsedBody = JSON.parse(rawBody);
-    const { eventType, data, metadata } = parsedBody;
+    const { eventType, data } = parsedBody;
+    const sql = db();
+
+    // Retrouver la commande via la référence marchand (jamais via des
+    // données client falsifiables)
+    const reference =
+      parsedBody.merchantPaymentReference ||
+      data?.merchantPaymentReference ||
+      data?.metadata?.merchantPaymentReference ||
+      data?.reference;
+
+    if (!reference) {
+      console.error('Webhook sans référence de commande:', parsedBody);
+      return res.status(200).json({ success: true }); // ACK pour éviter les rejeux
+    }
 
     if (eventType === 'payment.success') {
-      const appsScriptUrl = process.env.VITE_APPS_SCRIPT_WEBHOOK_URL;
-      
-      if (appsScriptUrl) {
-        // Validation stricte du montant (Faille de manipulation de prix corrigée)
-        const actualPaid = data?.paidAmount || 0;
-        const derivedPrice = Math.round(actualPaid / 0.6);
+      const actualPaid = Number(data?.paidAmount || data?.amount || 0);
 
-        // Formate les données pour le Apps Script
-        const orderData = {
-          type: "order",
-          nom: metadata?.nom || data?.payerIdentifier || "Client",
-          prenom: metadata?.prenom || "",
-          telephone: data?.payerIdentifier || metadata?.telephone || "",
-          adresse: metadata?.adresse || "Non renseignée",
-          produit: metadata?.produit || "Commande en ligne",
-          // On ignore le prix envoyé par le client, on force le prix calculé sur l'argent reçu
-          prix: `${derivedPrice} GNF (Estimé)`,
-          prixNumeric: derivedPrice,
-          acompte: `${actualPaid} GNF (Payé via Djomy)`,
-          acompteNumeric: actualPaid,
-          date: new Date().toISOString()
-        };
+      const [order] = await sql`
+        SELECT id, deposit_amount, price_total, payment_status FROM orders
+        WHERE reference = ${String(reference)} OR djomy_transaction_id = ${String(data?.transactionId || data?.id || '')}
+        LIMIT 1
+      `;
 
-        const result = await fetch(appsScriptUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(orderData)
-        });
-        
-        if (!result.ok) {
-          const errorText = await result.text();
-          throw new Error(`Apps Script failed with status ${result.status}: ${errorText}`);
-        }
-        
-        console.log("Apps Script Webhook status:", result.status);
+      if (!order) {
+        console.error('Webhook: commande introuvable pour référence', reference);
+        return res.status(200).json({ success: true });
       }
+
+      if (order.payment_status === 'paid') {
+        return res.status(200).json({ success: true }); // déjà traité (idempotence)
+      }
+
+      // ⚠️ Contrôle anti-fraude : le montant payé doit couvrir l'acompte attendu
+      if (actualPaid < order.deposit_amount) {
+        console.error(
+          `⚠️ ALERTE FRAUDE : commande ${reference} — payé ${actualPaid} GNF < acompte attendu ${order.deposit_amount} GNF`
+        );
+        await sql`
+          UPDATE orders SET payment_status = 'failed', paid_amount = ${actualPaid},
+            metadata = jsonb_set(COALESCE(metadata, '{}'::jsonb), '{fraudAlert}', 'true'::jsonb)
+          WHERE id = ${order.id}
+        `;
+        return res.status(200).json({ success: true });
+      }
+
+      await sql`
+        UPDATE orders
+        SET payment_status = 'paid', paid_amount = ${actualPaid}, paid_at = now(),
+            djomy_transaction_id = COALESCE(NULLIF(${String(data?.transactionId || data?.id || '')}, ''), djomy_transaction_id)
+        WHERE id = ${order.id}
+      `;
+      console.log(`✅ Commande ${reference} marquée PAYÉE (${actualPaid} GNF).`);
+    } else if (eventType === 'payment.failed' || eventType === 'payment.cancelled') {
+      await sql`
+        UPDATE orders SET payment_status = ${eventType === 'payment.failed' ? 'failed' : 'cancelled'}
+        WHERE reference = ${String(reference)} AND payment_status = 'pending'
+      `;
     }
 
     return res.status(200).json({ success: true });
   } catch (err: any) {
-    console.error("Webhook error:", err);
+    console.error('Webhook error:', err);
     return res.status(500).json({ error: err.message });
   }
 }

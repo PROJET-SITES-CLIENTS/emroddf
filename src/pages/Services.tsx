@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Loader2, Search, ArrowRight, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
-import { fetchCatalogue, fetchCategoriesList, getImageUrl, type Product } from "../lib/api";
+import { fetchCatalogue, fetchCategoriesList, type Product } from "../lib/api";
 
 import heroBg2 from "../assets/images/hero-bg-2.jpg";
 
@@ -225,7 +225,7 @@ export default function Services() {
                   animate={{ opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }}
                   exit={{ opacity: 0, scale: 0.85, y: -20 }}
                   transition={{ duration: 0.5, delay: (i % 8) * 0.06, ease: [0.25, 0.46, 0.45, 0.94] }}
-                  key={item.folderId}
+                  key={item.id}
                 >
                   <TiltCard className="h-full relative group">
                     <Link
@@ -234,9 +234,9 @@ export default function Services() {
                     >
                       {/* Image */}
                       <div className="aspect-square overflow-hidden bg-secondary relative">
-                        {item.mainImageId ? (
+                        {item.mainImageUrl ? (
                           <img
-                            src={getImageUrl(item.mainImageId)}
+                            src={item.mainImageUrl}
                             alt={item.name}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
                             loading="lazy"

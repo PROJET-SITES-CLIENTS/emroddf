@@ -16,22 +16,16 @@ import {
 } from "lucide-react";
 import { useParams, Link } from "react-router-dom";
 import OrderModal from "../components/OrderModal";
-import { fetchProductDetail, getImageUrl } from "../lib/api";
+import { fetchProductDetail } from "../lib/api";
 import heroBg from "../assets/images/hero-bg.jpg";
 
 interface ProductImage {
-  id: string;
-  name: string;
-  prix: string;
-  prixNumeric: number;
-  description: string;
-  dimensions?: string;
-  finition?: string;
-  essence?: string;
+  id: number;
+  url: string;
 }
 
 interface ProductDetailData {
-  folderId: string;
+  id: number;
   name: string;
   category: string;
   prix: string;
@@ -40,7 +34,6 @@ interface ProductDetailData {
   dimensions?: string;
   finition?: string;
   essence?: string;
-  mainImageId: string | null;
   images: ProductImage[];
 }
 
@@ -68,7 +61,7 @@ export default function ProductDetail() {
     if (!categorySlug || !modelSlug) return;
     fetchProductDetail(categorySlug, modelSlug)
       .then((data) => {
-        if (data.folderId) setProduct(data);
+        if (data.id) setProduct(data);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -123,12 +116,12 @@ export default function ProductDetail() {
   }
 
   const currentImage = product.images[currentIndex];
-  const displayPrix = currentImage?.prix || product.prix || "Prix sur demande";
-  const displayPrixNumeric = currentImage?.prixNumeric || product.prixNumeric || 0;
-  const displayDescription = currentImage?.description || product.description || "";
-  const displayDimensions = currentImage?.dimensions || product.dimensions || "Sur-mesure";
-  const displayFinition = currentImage?.finition || product.finition || "Premium";
-  const displayEssence = currentImage?.essence || product.essence || "Bois massif";
+  const displayPrix = product.prix || "Prix sur demande";
+  const displayPrixNumeric = product.prixNumeric || 0;
+  const displayDescription = product.description || "";
+  const displayDimensions = product.dimensions || "Sur-mesure";
+  const displayFinition = product.finition || "Premium";
+  const displayEssence = product.essence || "Bois massif";
 
   const acompteNumeric = Math.round(displayPrixNumeric * 0.6);
   const acompte = displayPrixNumeric
@@ -162,8 +155,8 @@ export default function ProductDetail() {
                   <AnimatePresence mode="wait">
                     <motion.img
                       key={currentImage?.id}
-                      src={getImageUrl(currentImage?.id, 1000)}
-                      alt={currentImage?.name || product.name}
+                      src={currentImage?.url}
+                      alt={product.name}
                       className="w-full h-full object-cover"
                       initial={{ opacity: 0, filter: "blur(10px)" }}
                       animate={{ opacity: 1, filter: "blur(0px)" }}
@@ -221,8 +214,8 @@ export default function ProductDetail() {
                     }`}
                   >
                     <img
-                      src={getImageUrl(img.id)}
-                      alt={img.name}
+                      src={img.url}
+                      alt={product.name}
                       className="w-full h-full object-cover"
                       loading="lazy"
                     />
@@ -346,7 +339,8 @@ export default function ProductDetail() {
       <OrderModal
         isOpen={orderOpen}
         onClose={() => setOrderOpen(false)}
-        produit={`${product.name} (Modèle ${currentIndex + 1})`}
+        productId={product.id}
+        produit={product.name}
         prix={displayPrix}
         prixNumeric={displayPrixNumeric}
       />
@@ -389,8 +383,8 @@ export default function ProductDetail() {
               <div className="relative w-full max-w-[95vw] h-[90vh] flex items-center justify-center">
                 <motion.img
                   key={currentImage?.id}
-                  src={getImageUrl(currentImage?.id, 1000)}
-                  alt={currentImage?.name}
+                  src={currentImage?.url}
+                  alt={product.name}
                   initial={{ scale: 0.9, opacity: 0, filter: "blur(10px)" }}
                   animate={{ scale: 1, opacity: 1, filter: "blur(0px)" }}
                   exit={{ scale: 0.9, opacity: 0, filter: "blur(10px)" }}
