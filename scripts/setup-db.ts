@@ -16,14 +16,26 @@ async function main() {
     process.exit(1);
   }
 
-  const sql = neon(url) as unknown as (strings: TemplateStringsArray, ...values: any[]) => Promise<any[]>;
+  const sql = neon(url) as unknown as {
+    (strings: TemplateStringsArray, ...values: any[]): Promise<any[]>;
+    query: (text: string, values?: any[]) => Promise<any>;
+  };
   const root = process.cwd();
 
-  // 1. Schéma
+  // 1. Schéma — exécution instruction par instruction (les requêtes
+  //    préparées n'acceptent pas plusieurs commandes à la fois)
   console.log('📄 Exécution du schéma (db/schema.sql)...');
   const schema = readFileSync(join(root, 'db', 'schema.sql'), 'utf8');
-  const execRaw = neon(url) as unknown as (query: string) => Promise<any>;
-  await execRaw(schema);
+  const statements = schema
+    .split('\n')
+    .filter((line) => !line.trimStart().startsWith('--'))
+    .join('\n')
+    .split(';')
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+  for (const statement of statements) {
+    await sql.query(statement);
+  }
   console.log('   ✅ Tables créées/vérifiées.');
 
   // 2. Paramètres par défaut (sans écraser l'existant)
