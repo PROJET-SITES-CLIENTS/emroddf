@@ -296,7 +296,7 @@ export default function Home() {
           <AnimatePresence mode="popLayout">
             <motion.img
               key={currentHeroSlide}
-              src={heroImages[currentHeroSlide]}
+              src={heroImages[currentHeroSlide % Math.max(heroImages.length, 1)]}
               alt="Mobilier d'exception"
               className="absolute w-full h-full object-cover animate-ken-burns"
               initial={{ opacity: 0 }}

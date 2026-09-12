@@ -65,11 +65,20 @@ export default async function handler(req: any, res: any) {
     if (eventType === 'payment.success') {
       const actualPaid = Number(data?.paidAmount || data?.amount || 0);
 
-      const [order] = await sql`
-        SELECT id, deposit_amount, price_total, payment_status FROM orders
-        WHERE reference = ${String(reference)} OR djomy_transaction_id = ${String(data?.transactionId || data?.id || '')}
-        LIMIT 1
-      `;
+      // ⚠️ On ne joint jamais sur un ID de transaction vide (toutes les
+      // commandes démarrent avec un ID vide → risque de mauvaise correspondance)
+      const tid = String(data?.transactionId || data?.id || '');
+      const [order] = tid
+        ? await sql`
+            SELECT id, deposit_amount, price_total, payment_status FROM orders
+            WHERE reference = ${String(reference)} OR djomy_transaction_id = ${tid}
+            LIMIT 1
+          `
+        : await sql`
+            SELECT id, deposit_amount, price_total, payment_status FROM orders
+            WHERE reference = ${String(reference)}
+            LIMIT 1
+          `;
 
       if (!order) {
         console.error('Webhook: commande introuvable pour référence', reference);

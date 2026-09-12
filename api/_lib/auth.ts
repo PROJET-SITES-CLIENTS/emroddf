@@ -47,10 +47,12 @@ export function verifySessionToken(token: string | undefined | null): boolean {
 
 // ── Vérification des identifiants admin ────────────────────────────
 export function checkCredentials(email: string, password: string): boolean {
-  const envEmail = process.env.ADMIN_EMAIL || '';
-  const envPassword = process.env.ADMIN_PASSWORD || '';
+  // Nettoyage des deux côtés : une espace parasite dans les variables
+  // d'environnement ne doit jamais bloquer la connexion
+  const envEmail = (process.env.ADMIN_EMAIL || '').trim().toLowerCase();
+  const envPassword = (process.env.ADMIN_PASSWORD || '').trim();
   if (!envEmail || !envPassword) return false;
-  return safeEqual(email.trim().toLowerCase(), envEmail.toLowerCase()) && safeEqual(password, envPassword);
+  return safeEqual(email.trim().toLowerCase(), envEmail) && safeEqual(password, envPassword);
 }
 
 // ── Gestion du cookie (httpOnly, Secure en prod, SameSite=Lax) ─────

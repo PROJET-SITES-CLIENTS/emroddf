@@ -25,10 +25,7 @@ const GALLERY_IMAGES_FOLDER_ID = '1N01xW4mbQ4caTOI-CAk9t8swCWMhuxGx';
 const GALLERY_VIDEOS_FOLDER_ID = '1GPCLj9JT5sn5xD8QN_YwiJI1DWp7FqTh';
 const FURNITURE_FOLDER_ID = '1yisVYsJBiyyYeP9DEg8d-BbXxPJ0Hwju';
 
-// ── Client SQL typé simple ─────────────────────────────────────────
-type SqlClient = (strings: TemplateStringsArray, ...values: any[]) => Promise<any[]>;
-const sql: SqlClient = neon(process.env.DATABASE_URL as string) as unknown as SqlClient;
-
+// ── Validation de la configuration (avant toute connexion) ────────
 if (!process.env.DATABASE_URL) {
   console.error('❌ DATABASE_URL manquante dans .env');
   process.exit(1);
@@ -37,6 +34,10 @@ if (!process.env.BLOB_READ_WRITE_TOKEN) {
   console.error('❌ BLOB_READ_WRITE_TOKEN manquant dans .env');
   process.exit(1);
 }
+
+// ── Client SQL typé simple ─────────────────────────────────────────
+type SqlClient = (strings: TemplateStringsArray, ...values: any[]) => Promise<any[]>;
+const sql: SqlClient = neon(process.env.DATABASE_URL) as unknown as SqlClient;
 
 // ── Helpers ────────────────────────────────────────────────────────
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
