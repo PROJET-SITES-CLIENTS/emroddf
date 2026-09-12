@@ -153,7 +153,7 @@ export default function GalleryManager() {
             <div key={item.id} className={`bg-white border rounded-sm overflow-hidden group ${item.is_published ? 'border-neutral-200' : 'border-amber-200 opacity-75'}`}>
               <div className="relative aspect-square bg-neutral-100">
                 {item.media_type === 'video' ? (
-                  item.url.includes('.blob.') || /\.(mp4|webm)(\?|$)/i.test(item.url) ? (
+                  /\.(mp4|webm|mov)(\?|$)/i.test(item.url) || item.url.includes('.blob.') ? (
                     <video src={item.url} muted className="w-full h-full object-cover" preload="metadata" />
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center text-neutral-400 gap-2">

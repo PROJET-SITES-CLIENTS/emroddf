@@ -63,12 +63,19 @@ export default function CatalogueManager() {
   };
 
   const moveCategory = async (cat: AdminCategory, dir: -1 | 1) => {
+    // Réindexation complète : on échange dans la liste triée puis on
+    // réécrit toutes les positions (garantit un ordre strict même si
+    // plusieurs catégories partagent la même position initiale)
     const sorted = [...categories].sort((a, b) => a.position - b.position || a.name.localeCompare(b.name));
     const idx = sorted.findIndex((c) => c.id === cat.id);
     const target = sorted[idx + dir];
     if (!target) return;
-    await api.put(`/api/admin/categories/${cat.id}`, { position: target.position });
-    await api.put(`/api/admin/categories/${target.id}`, { position: cat.position });
+    [sorted[idx], sorted[idx + dir]] = [sorted[idx + dir], sorted[idx]];
+    for (let pos = 0; pos < sorted.length; pos++) {
+      if (sorted[pos].position !== pos) {
+        await api.put(`/api/admin/categories/${sorted[pos].id}`, { position: pos });
+      }
+    }
     load();
   };
 
@@ -85,12 +92,17 @@ export default function CatalogueManager() {
   };
 
   const moveProduct = async (p: AdminProduct, dir: -1 | 1) => {
+    // Même logique de réindexation complète que les catégories
     const sorted = [...products].sort((a, b) => a.position - b.position || a.created_at.localeCompare(b.created_at));
     const idx = sorted.findIndex((x) => x.id === p.id);
     const target = sorted[idx + dir];
     if (!target) return;
-    await api.put(`/api/admin/products/${p.id}`, { position: target.position });
-    await api.put(`/api/admin/products/${target.id}`, { position: p.position });
+    [sorted[idx], sorted[idx + dir]] = [sorted[idx + dir], sorted[idx]];
+    for (let pos = 0; pos < sorted.length; pos++) {
+      if (sorted[pos].position !== pos) {
+        await api.put(`/api/admin/products/${sorted[pos].id}`, { position: pos });
+      }
+    }
     load();
   };
 

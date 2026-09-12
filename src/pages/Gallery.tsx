@@ -181,7 +181,7 @@ export default function Gallery() {
                 className="relative group cursor-pointer overflow-hidden break-inside-avoid shadow-sm hover:shadow-2xl transition-all duration-700 bg-card border border-border/50 image-shine hover-lift rounded-sm"
                 onClick={() => openImage(img, i)}
               >
-                {img.media_type === 'video' ? (
+                {img.media_type === 'video' && isVideoFile(img.url) ? (
                   <video
                     src={img.url}
                     muted
@@ -189,6 +189,14 @@ export default function Gallery() {
                     preload="metadata"
                     className="w-full h-auto max-h-[70vh] object-cover group-hover:scale-110 transition-transform duration-1000 ease-[0.25,0.46,0.45,0.94]"
                   />
+                ) : img.media_type === 'video' ? (
+                  /* Vidéo externe (embed) : vignette générique cliquable */
+                  <div className="w-full aspect-video flex flex-col items-center justify-center gap-3 bg-secondary/60 group-hover:bg-secondary transition-colors">
+                    <div className="w-16 h-16 rounded-sm flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #154c30, #11522f)' }}>
+                      <span className="text-white text-2xl">▶</span>
+                    </div>
+                    <span className="text-xs uppercase tracking-[0.2em] text-foreground/40">{img.title || "Vidéo"}</span>
+                  </div>
                 ) : (
                   <img
                     src={img.url}
