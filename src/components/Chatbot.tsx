@@ -53,7 +53,7 @@ function TypingDots() {
       {[0, 1, 2].map((i) => (
         <motion.span
           key={i}
-          className="w-2.5 h-2.5 rounded-full"
+          className="w-2.5 h-2.5 rounded-sm"
           style={{ background: "#e85d04" }}
           animate={{ y: [0, -8, 0], opacity: [0.4, 1, 0.4], scale: [0.8, 1.2, 0.8] }}
           transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.15, ease: "easeInOut" }}
@@ -136,22 +136,21 @@ export default function Chatbot() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setIsOpen(true)}
-            className="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-40 flex items-center gap-3 px-5 py-3.5 shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-all group rounded-[32px] bg-white border border-border/60 hover:border-accent/30 hover:shadow-[0_12px_40px_rgba(232,93,4,0.12)]"
+            className="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-40 flex items-center gap-3 px-4 py-3 border border-border bg-white transition-all group rounded-sm hover:border-accent/40"
           >
             {/* Shimmer sweep isolated */}
-            <div className="absolute inset-0 rounded-[32px] overflow-hidden pointer-events-none">
+            <div className="absolute inset-0 rounded-sm overflow-hidden pointer-events-none">
               <div className="absolute inset-0 w-full h-full opacity-0 group-hover:opacity-100 transition-opacity duration-700 shimmer-sweep" style={{ background: "linear-gradient(90deg, transparent, rgba(232,93,4,0.05), transparent)" }} />
             </div>
             
-            <div className="relative z-10 w-10 h-10 rounded-full flex items-center justify-center bg-secondary/50 text-primary transition-colors duration-500 group-hover:bg-accent group-hover:text-white">
+            <div className="relative z-10 w-8 h-8 rounded-sm flex items-center justify-center bg-secondary/50 text-primary transition-colors duration-500 group-hover:bg-accent group-hover:text-white">
               <MessageCircle className="w-5 h-5 group-hover:animate-wiggle" />
-              {/* Ping outside of overflow hidden */}
               <div className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5">
-                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#22c55e] opacity-75"></span>
-                 <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-[#22c55e] border-2 border-white"></span>
+                 <span className="animate-ping absolute inline-flex h-full w-full rounded-sm bg-[#22c55e] opacity-75"></span>
+                 <span className="relative inline-flex rounded-sm h-3.5 w-3.5 bg-[#22c55e] border-2 border-white"></span>
               </div>
             </div>
-            <span className="text-xs font-bold tracking-[0.15em] text-primary group-hover:text-accent uppercase relative z-10 pr-2 transition-colors duration-500">
+            <span className="text-xs font-normal tracking-[0.15em] text-primary group-hover:text-accent uppercase relative z-10 pr-2 transition-colors duration-500">
               Nous contacter
             </span>
           </motion.button>
@@ -170,34 +169,33 @@ export default function Chatbot() {
             style={{
               width: "min(420px, calc(100vw - 48px))",
               height: "min(680px, calc(100vh - 48px))",
-              borderRadius: "24px",
+              borderRadius: "2px",
               background: "rgba(13, 51, 32, 0.85)",
             }}
           >
             {/* Ambient inner glow */}
-            <div className="absolute top-0 right-0 w-[300px] h-[300px] rounded-full opacity-[0.04] blur-[60px] pointer-events-none" style={{ background: "radial-gradient(circle, #e85d04, transparent)" }} />
+            <div className="absolute top-0 right-0 w-[300px] h-[300px] opacity-[0.04] blur-[60px] pointer-events-none" style={{ background: "radial-gradient(circle, #e85d04, transparent)" }} />
 
             {/* Header */}
             <div
               className="shrink-0 flex items-center justify-between px-6 py-5 relative z-10"
               style={{
                 background: "linear-gradient(135deg, rgba(21,76,48,0.9) 0%, rgba(17,82,47,0.95) 100%)",
-                borderBottom: "1px solid rgba(232,93,4,0.15)",
-                boxShadow: "0 4px 20px rgba(0,0,0,0.1)"
+                borderBottom: "1px solid rgba(232,93,4,0.15)"
               }}
             >
               <div className="flex items-center gap-4">
                 <div
                   className="w-12 h-12 flex items-center justify-center relative group"
-                  style={{ borderRadius: "14px", background: "linear-gradient(135deg, #e85d04, #b84600)" }}
+                  style={{ borderRadius: "2px", background: "linear-gradient(135deg, #e85d04, #b84600)" }}
                 >
-                  <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity rounded-[14px]" />
+                  <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity rounded-sm" />
                   <Sparkles className="w-6 h-6 text-white animate-pulse" />
                 </div>
                 <div>
                   <p className="text-white font-heading text-lg tracking-wide leading-none mb-1">Assistant EMROD</p>
                   <p className="text-[#22c55e] text-xs flex items-center gap-1.5 font-medium uppercase tracking-widest">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e] inline-block animate-pulse" />
+                    <span className="w-1.5 h-1.5 rounded-sm bg-[#22c55e] inline-block animate-pulse" />
                     En ligne
                   </p>
                 </div>
@@ -206,13 +204,13 @@ export default function Chatbot() {
                 <button
                   onClick={handleReset}
                   title="Recommencer"
-                  className="w-10 h-10 flex items-center justify-center text-white/50 hover:text-white bg-white/5 hover:bg-white/10 transition-all rounded-full hover:rotate-180 duration-500"
+                  className="w-10 h-10 flex items-center justify-center text-white/50 hover:text-white bg-white/5 hover:bg-white/10 transition-all rounded-sm hover:rotate-180 duration-500"
                 >
                   <RotateCcw className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="w-10 h-10 flex items-center justify-center text-white/50 hover:text-white bg-white/5 hover:bg-white/10 transition-all rounded-full"
+                  className="w-10 h-10 flex items-center justify-center text-white/50 hover:text-white bg-white/5 hover:bg-white/10 transition-all rounded-sm"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -232,26 +230,26 @@ export default function Chatbot() {
                   >
                     {msg.role === "assistant" && (
                       <div
-                        className="shrink-0 w-8 h-8 flex items-center justify-center self-end mb-1 shadow-md"
-                        style={{ borderRadius: "10px", background: "linear-gradient(135deg, #e85d04, #b84600)" }}
+                        className="shrink-0 w-8 h-8 flex items-center justify-center self-end mb-1"
+                        style={{ borderRadius: "2px", background: "linear-gradient(135deg, #e85d04, #b84600)" }}
                       >
                         <Sparkles className="w-4 h-4 text-white" />
                       </div>
                     )}
                     <div
-                      className="max-w-[82%] text-sm md:text-base leading-relaxed px-5 py-3.5 shadow-md relative group"
+                      className="max-w-[82%] text-sm md:text-base leading-relaxed px-5 py-3.5 relative group"
                       style={
                         msg.role === "assistant"
                           ? {
                               background: "rgba(255,255,255,0.08)",
                               backdropFilter: "blur(8px)",
                               border: "1px solid rgba(232,93,4,0.1)",
-                              borderRadius: "4px 20px 20px 20px",
+                              borderRadius: "2px",
                               color: "rgba(255,255,255,0.9)",
                             }
                           : {
                               background: "linear-gradient(135deg, #e85d04, #b84600)",
-                              borderRadius: "20px 4px 20px 20px",
+                              borderRadius: "2px",
                               color: "#fff",
                             }
                       }
@@ -273,8 +271,8 @@ export default function Chatbot() {
                     className="flex gap-3 items-end"
                   >
                     <div
-                      className="shrink-0 w-8 h-8 flex items-center justify-center self-end mb-1 shadow-md"
-                      style={{ borderRadius: "10px", background: "linear-gradient(135deg, #e85d04, #b84600)" }}
+                      className="shrink-0 w-8 h-8 flex items-center justify-center self-end mb-1"
+                      style={{ borderRadius: "2px", background: "linear-gradient(135deg, #e85d04, #b84600)" }}
                     >
                       <Sparkles className="w-4 h-4 text-white animate-pulse" />
                     </div>
@@ -283,7 +281,7 @@ export default function Chatbot() {
                         background: "rgba(255,255,255,0.08)",
                         backdropFilter: "blur(8px)",
                         border: "1px solid rgba(232,93,4,0.1)",
-                        borderRadius: "4px 20px 20px 20px",
+                        borderRadius: "2px",
                       }}
                     >
                       <TypingDots />
@@ -306,7 +304,7 @@ export default function Chatbot() {
                   className="shrink-0 px-5 pb-6 bg-gradient-to-t from-background/90 to-transparent pt-8 relative z-20"
                 >
                   <p
-                    className="text-[10px] uppercase font-bold mb-3 px-2 flex items-center gap-2"
+                    className="text-[10px] uppercase font-medium mb-3 px-2 flex items-center gap-2"
                     style={{ color: "#e85d04", letterSpacing: "0.2em" }}
                   >
                     <span className="w-3 h-[1px] bg-accent" /> Questions fréquentes
@@ -323,7 +321,7 @@ export default function Chatbot() {
                         style={{
                           background: "rgba(255,255,255,0.03)",
                           border: "1px solid rgba(255,255,255,0.06)",
-                          borderRadius: "16px",
+                          borderRadius: "2px",
                           color: "rgba(255,255,255,0.8)",
                         }}
                         onMouseEnter={(e) => {
@@ -338,7 +336,7 @@ export default function Chatbot() {
                         }}
                       >
                         <span className="leading-snug font-medium mb-4">{faq.q}</span>
-                        <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center shrink-0 group-hover:bg-accent group-hover:text-white transition-colors self-end">
+                        <div className="w-8 h-8 rounded-sm bg-white/5 flex items-center justify-center shrink-0 group-hover:bg-accent group-hover:text-white transition-colors self-end">
                           <ChevronRight className="w-4 h-4" />
                         </div>
                       </motion.button>

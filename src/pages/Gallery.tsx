@@ -76,7 +76,7 @@ export default function Gallery() {
 
       {/* ── PAGE HEADER ──────────────────────── */}
       <div className="container mx-auto max-w-7xl px-6 md:px-12 mb-16">
-        <div ref={headerRef} className="relative pt-24 pb-24 overflow-hidden rounded-[40px] shadow-2xl group">
+        <div ref={headerRef} className="relative pt-24 pb-20 overflow-hidden group">
           <motion.div style={{ y: headerY, opacity: headerOpacity }} className="absolute inset-0">
             <img src="/gallery/IMG-20260531-WA0048.jpg" alt="Gallery Header" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000 ease-out animate-ken-burns" />
             <div className="absolute inset-0" style={{ background: "linear-gradient(to right, rgba(13,51,32,0.85) 0%, rgba(13,51,32,0.5) 100%)" }} />
@@ -84,11 +84,11 @@ export default function Gallery() {
 
           <div className="relative z-10 max-w-5xl px-8 md:px-16 text-white">
             <motion.div initial={{ opacity: 0, y: -20, filter: "blur(8px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ duration: 0.9, ease: [0.76, 0, 0.24, 1] }}>
-              <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/10 backdrop-blur-md border border-white/20 text-[10px] uppercase tracking-[0.3em] font-bold mb-8 rounded-full text-white">
-                <Sparkles className="w-3.5 h-3.5 text-accent animate-pulse" />
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 border border-white/20 text-[10px] uppercase tracking-[0.3em] font-medium mb-8 text-white/80">
+                <span className="w-1.5 h-1.5 rounded-sm bg-accent" />
                 Portfolio
               </div>
-              <h1 className="text-5xl md:text-7xl font-light mb-8 font-heading leading-tight text-white drop-shadow-lg">
+              <h1 className="text-4xl md:text-5xl font-light mb-6 font-heading leading-tight text-white">
                 Nos{" "}
                 <motion.span
                   className="italic inline-block font-normal text-gradient-animated"
@@ -103,7 +103,7 @@ export default function Gallery() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5, duration: 0.8 }}
-                className="text-lg md:text-xl text-white/80 leading-relaxed font-light max-w-xl drop-shadow-md"
+                className="text-lg md:text-xl text-white/80 leading-relaxed font-light max-w-xl"
               >
                 Découvrez nos derniers projets. Nos meubles s'intègrent parfaitement à tous les styles d'intérieurs.
               </motion.p>
@@ -117,13 +117,13 @@ export default function Gallery() {
                 >
                   <button
                     onClick={() => setActiveTab('images')}
-                    className={`px-6 py-2.5 rounded-full font-bold uppercase tracking-widest text-[10px] sm:text-xs transition-all duration-300 ${activeTab === 'images' ? 'bg-accent text-white shadow-[0_0_20px_rgba(232,93,4,0.5)] border border-accent' : 'bg-black/30 backdrop-blur-md text-white/70 hover:bg-white/20 border border-white/20 hover:text-white'}`}
+                    className={`px-6 py-2.5 rounded-sm font-medium uppercase tracking-widest text-[10px] sm:text-xs transition-all duration-300 ${activeTab === 'images' ? 'bg-accent text-white border border-accent' : 'bg-black/30 backdrop-blur-md text-white/70 hover:bg-white/20 border border-white/20 hover:text-white'}`}
                   >
                     Images ({images.length})
                   </button>
                   <button
                     onClick={() => setActiveTab('videos')}
-                    className={`px-6 py-2.5 rounded-full font-bold uppercase tracking-widest text-[10px] sm:text-xs transition-all duration-300 ${activeTab === 'videos' ? 'bg-accent text-white shadow-[0_0_20px_rgba(232,93,4,0.5)] border border-accent' : 'bg-black/30 backdrop-blur-md text-white/70 hover:bg-white/20 border border-white/20 hover:text-white'}`}
+                    className={`px-6 py-2.5 rounded-sm font-medium uppercase tracking-widest text-[10px] sm:text-xs transition-all duration-300 ${activeTab === 'videos' ? 'bg-accent text-white border border-accent' : 'bg-black/30 backdrop-blur-md text-white/70 hover:bg-white/20 border border-white/20 hover:text-white'}`}
                   >
                     Vidéos ({videos.length})
                   </button>
@@ -140,21 +140,21 @@ export default function Gallery() {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-32">
             <div className="relative w-16 h-16 mb-6">
-              <div className="absolute inset-0 rounded-full border-2 border-accent/20 animate-pulse" />
-              <div className="absolute inset-0 rounded-full border-2 border-accent animate-spin-slow" style={{ borderTopColor: "transparent" }} />
-              <div className="absolute inset-2 rounded-full border-2 border-primary animate-spin" style={{ borderRightColor: "transparent", animationDirection: "reverse" }} />
+              <div className="absolute inset-0 rounded-sm border-2 border-accent/20 animate-pulse" />
+              <div className="absolute inset-0 rounded-sm border-2 border-accent animate-spin-slow" style={{ borderTopColor: "transparent" }} />
+              <div className="absolute inset-2 rounded-sm border-2 border-primary animate-spin" style={{ borderRightColor: "transparent", animationDirection: "reverse" }} />
             </div>
             <p className="tracking-[0.2em] uppercase text-[10px] font-bold text-foreground/40 animate-pulse">
               Chargement de la galerie...
             </p>
           </div>
         ) : error ? (
-          <div className="text-center py-32 bg-red-950/20 border border-red-500/20 rounded-lg relative overflow-hidden">
+          <div className="text-center py-32 bg-red-950/20 border border-red-500/20 rounded-sm relative overflow-hidden">
             <div className="text-6xl mb-6 opacity-80 animate-pulse">⚠️</div>
             <p className="text-red-400 italic text-lg max-w-md mx-auto">{error}</p>
           </div>
         ) : currentItems.length === 0 ? (
-          <div className="text-center py-32 bg-secondary/30 border border-border rounded-lg relative overflow-hidden">
+          <div className="text-center py-32 bg-secondary/30 border border-border rounded-sm relative overflow-hidden">
             <div className="absolute inset-0 bg-noise opacity-5 pointer-events-none" />
             <div className="text-6xl mb-6 opacity-20 animate-float">{activeTab === 'videos' ? '🎥' : '🖼️'}</div>
             <p className="text-foreground/50 italic text-lg">Aucune réalisation dans cette catégorie.</p>
@@ -190,7 +190,7 @@ export default function Gallery() {
                   <motion.div
                     initial={{ scale: 0, rotate: -90 }}
                     whileHover={{ scale: 1.1, rotate: 0 }}
-                    className="bg-white/10 backdrop-blur-md text-white p-5 rounded-full border border-white/20 shadow-2xl transform scale-0 group-hover:scale-100 transition-all duration-500 delay-100"
+                    className="bg-white/10 backdrop-blur-md text-white p-5 rounded-sm border border-white/20 transform scale-0 group-hover:scale-100 transition-all duration-500 delay-100"
                   >
                     {img.mimeType?.includes('video') ? (
                       <div className="w-6 h-6 flex items-center justify-center text-xl">▶</div>
@@ -199,14 +199,14 @@ export default function Gallery() {
                     )}
                   </motion.div>
                   <div className="overflow-hidden">
-                    <p className="text-white text-[10px] uppercase tracking-[0.2em] font-bold px-4 text-center line-clamp-1 translate-y-full group-hover:translate-y-0 transition-transform duration-500 delay-200">
+                    <p className="text-white text-[10px] uppercase tracking-[0.2em] font-medium px-4 text-center line-clamp-1 translate-y-full group-hover:translate-y-0 transition-transform duration-500 delay-200">
                       {img.name.replace(/\.[^/.]+$/, "")}
                     </p>
                   </div>
                 </div>
 
                 {/* Number badge — sliding in */}
-                <div className="absolute top-4 left-4 w-8 h-8 flex items-center justify-center text-[10px] font-bold opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500 shadow-lg" style={{ background: "linear-gradient(135deg, #e85d04, #b84600)", color: "#fff" }}>
+                <div className="absolute top-4 left-4 w-8 h-8 flex items-center justify-center text-[10px] font-medium opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500" style={{ background: "linear-gradient(135deg, #e85d04, #b84600)", color: "#fff" }}>
                   {i + 1}
                 </div>
               </motion.div>
@@ -232,9 +232,9 @@ export default function Gallery() {
           >
             {/* Background bokeh orbs — Dynamic */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden">
-              <div className="absolute top-[10%] left-[20%] w-[500px] h-[500px] rounded-full opacity-[0.07] blur-[100px] animate-float-slow animate-morph-blob" style={{ background: "#e85d04" }} />
-              <div className="absolute bottom-[10%] right-[20%] w-[400px] h-[400px] rounded-full opacity-[0.05] blur-[80px] animate-float" style={{ background: "#f97316", animationDelay: "-2s" }} />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full opacity-[0.03] blur-[120px] animate-pulse" style={{ background: "#11522f" }} />
+              <div className="absolute top-[10%] left-[20%] w-[500px] h-[500px] rounded-sm opacity-[0.07] blur-[100px] animate-float-slow animate-morph-blob" style={{ background: "#e85d04" }} />
+              <div className="absolute bottom-[10%] right-[20%] w-[400px] h-[400px] rounded-sm opacity-[0.05] blur-[80px] animate-float" style={{ background: "#f97316", animationDelay: "-2s" }} />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-sm opacity-[0.03] blur-[120px] animate-pulse" style={{ background: "#11522f" }} />
             </div>
 
             {/* Top bar */}
@@ -245,7 +245,7 @@ export default function Gallery() {
               className="absolute top-0 left-0 w-full p-6 md:p-8 flex justify-between items-center z-30"
             >
               <div className="flex items-center gap-6">
-                <span className="text-white/40 text-[10px] uppercase tracking-[0.3em] font-bold border border-white/10 px-3 py-1 rounded-full">
+                <span className="text-white/40 text-[10px] uppercase tracking-[0.3em] font-medium border border-white/10 px-3 py-1 rounded-sm">
                   {selectedIndex + 1} <span className="mx-1 opacity-50">/</span> {currentItems.length}
                 </span>
                 <div className="font-heading text-white/90 text-xl md:text-2xl hidden md:block">
@@ -254,7 +254,7 @@ export default function Gallery() {
               </div>
               <button
                 onClick={() => setSelectedImage(null)}
-                className="text-white/50 hover:text-white p-3 md:p-4 bg-white/5 hover:bg-white/10 backdrop-blur-md rounded-full transition-all duration-300 border border-white/10 hover:border-accent hover:shadow-[0_0_20px_rgba(232,93,4,0.3)] group"
+                className="text-white/50 hover:text-white p-3 md:p-4 bg-white/5 hover:bg-white/10 backdrop-blur-md rounded-sm transition-all duration-300 border border-white/10 hover:border-accent group"
               >
                 <X className="w-6 h-6 group-hover:rotate-90 transition-transform duration-500" />
               </button>
@@ -275,7 +275,7 @@ export default function Gallery() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.4 }}
                   onClick={prevImage}
-                  className="absolute left-4 md:left-12 top-1/2 -translate-y-1/2 z-30 text-white/50 hover:text-white bg-white/5 hover:bg-white/10 backdrop-blur-md p-4 md:p-5 rounded-full transition-all duration-300 border border-white/10 hover:border-accent hover:shadow-[0_0_20px_rgba(232,93,4,0.3)] hover:-translate-x-2"
+                  className="absolute left-4 md:left-12 top-1/2 -translate-y-1/2 z-30 text-white/50 hover:text-white bg-white/5 hover:bg-white/10 backdrop-blur-md p-4 md:p-5 rounded-sm transition-all duration-300 border border-white/10 hover:border-accent hover:-translate-x-2"
                 >
                   <ChevronLeft className="w-6 h-6 md:w-8 md:h-8" />
                 </motion.button>
@@ -284,7 +284,7 @@ export default function Gallery() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.4 }}
                   onClick={nextImage}
-                  className="absolute right-4 md:right-12 top-1/2 -translate-y-1/2 z-30 text-white/50 hover:text-white bg-white/5 hover:bg-white/10 backdrop-blur-md p-4 md:p-5 rounded-full transition-all duration-300 border border-white/10 hover:border-accent hover:shadow-[0_0_20px_rgba(232,93,4,0.3)] hover:translate-x-2"
+                  className="absolute right-4 md:right-12 top-1/2 -translate-y-1/2 z-30 text-white/50 hover:text-white bg-white/5 hover:bg-white/10 backdrop-blur-md p-4 md:p-5 rounded-sm transition-all duration-300 border border-white/10 hover:border-accent hover:translate-x-2"
                 >
                   <ChevronRight className="w-6 h-6 md:w-8 md:h-8" />
                 </motion.button>
@@ -304,7 +304,7 @@ export default function Gallery() {
                 {selectedImage.mimeType?.includes('video') ? (
                   <iframe
                     src={`https://drive.google.com/file/d/${selectedImage.id}/preview`}
-                    className="w-[90vw] md:w-[70vw] h-[60vh] max-h-[85vh] shadow-2xl border border-white/5 rounded-xl bg-black"
+                    className="w-[90vw] md:w-[70vw] h-[60vh] max-h-[85vh] shadow-2xl border border-white/5 rounded-sm bg-black"
                     allow="autoplay; fullscreen"
                   />
                 ) : (
@@ -324,7 +324,7 @@ export default function Gallery() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
-                className="absolute bottom-8 left-1/2 -translate-x-1/2 w-64 h-1 bg-white/10 rounded-full overflow-hidden hidden md:block"
+                className="absolute bottom-8 left-1/2 -translate-x-1/2 w-64 h-1 bg-white/10 rounded-sm overflow-hidden hidden md:block"
               >
                 <motion.div
                   className="h-full bg-gradient-to-r from-accent to-gold"

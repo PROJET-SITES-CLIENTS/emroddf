@@ -40,7 +40,7 @@ const FloatingInput = ({ id, label, type="text", value, onChange, placeholder=""
           letterSpacing: active ? "0.1em" : "normal",
           textTransform: active ? "uppercase" : "none",
           color: focused ? "#e85d04" : active ? "#e85d0480" : "var(--color-muted-foreground)",
-          fontWeight: active ? 700 : 400,
+          fontWeight: active ? 500 : 400,
         }}
       >
         {label} <span className="text-accent ml-0.5">*</span>
@@ -92,26 +92,48 @@ export default function OrderModal({
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await submitOrder({
-        ...formData,
-        produit,
-        prix,
-        prixNumeric,
-        acompte,
-        acompteNumeric,
+      // Préparation du message WhatsApp pour la page de succès
+      const waMessage = `Bonjour EMROD SARL ! 🪑\n\nJe viens de payer mon acompte sur votre site via Djomy.\n\n📋 *MA COMMANDE*\nProduit : ${produit}\nPrix total : ${prix}\nAcompte payé : ${acompte}\n\n👤 *MES COORDONNÉES*\nNom & Prénom : ${formData.nom} ${formData.prenom}\nTéléphone : ${formData.telephone}\nAdresse de livraison : ${formData.adresse}\n\nJe confirme ma commande ! 🙏`;
+      localStorage.setItem("emrod_last_order_wa", waMessage);
+
+      // Appel de notre API Serverless pour initier le paiement Djomy
+      const res = await fetch("/api/payment/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prixTotalNumeric: prixNumeric,
+          payerNumber: formData.telephone.replace(/[^0-9]/g, ''),
+          description: `Acompte 60% - ${produit}`,
+          metadata: {
+            nom: formData.nom,
+            prenom: formData.prenom,
+            telephone: formData.telephone,
+            adresse: formData.adresse,
+            produit: produit,
+            prix: prix
+          }
+        })
       });
 
-      const waMessage = `Bonjour EMROD SARL ! 🪑\n\nJe viens de passer une commande sur votre site.\n\n📋 *MA COMMANDE*\nProduit : ${produit}\nPrix total : ${prix}\nAcompte à régler (60%) : ${acompte}\n\n👤 *MES COORDONNÉES*\nNom & Prénom : ${formData.nom} ${formData.prenom}\nTéléphone : ${formData.telephone}\nAdresse de livraison : ${formData.adresse}\n\nJe confirme ma commande et suis prêt(e) à régler l'acompte. Merci ! 🙏`;
-      const waLink = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(waMessage)}`;
+      const data = await res.json();
 
-      setStep("success");
-
-      setTimeout(() => {
-        window.open(waLink, "_blank");
-      }, 1500);
-    } catch (err) {
-      console.error(err);
-      alert("Une erreur est survenue. Veuillez réessayer.");
+      if (data.success && data.redirectUrl) {
+        setStep("success");
+        setTimeout(() => {
+          // Redirection vers le portail de paiement Djomy
+          window.location.href = data.redirectUrl;
+        }, 1500);
+      } else {
+        console.error("Détails complets de l'erreur API Djomy :", data);
+        let errorMsg = data.error || "Erreur lors de l'initialisation du paiement";
+        if (data.details) {
+            errorMsg += `\n\nDétails techniques : ${data.details}`;
+        }
+        throw new Error(errorMsg);
+      }
+    } catch (err: any) {
+      console.error("Erreur interceptée par le catch :", err);
+      alert(err.message || "Une erreur est survenue avec le système de paiement. Veuillez réessayer.");
     } finally {
       setIsSubmitting(false);
     }
@@ -136,7 +158,7 @@ export default function OrderModal({
             style={{ perspective: "1000px" }}
           >
             {/* Ambient glow */}
-            <div className="absolute top-0 left-0 w-64 h-64 bg-accent/5 blur-3xl rounded-full pointer-events-none" />
+            <div className="absolute top-0 left-0 w-64 h-64 bg-accent/5 blur-3xl rounded-sm pointer-events-none" />
 
             {/* Accent top bar */}
             <div className="absolute top-0 left-0 w-full h-1" style={{ background: "linear-gradient(90deg, #154c30, #e85d04, #154c30)", backgroundSize: "200% 100%", animation: "shimmer 3s infinite linear" }} />
@@ -145,7 +167,7 @@ export default function OrderModal({
             <button
               onClick={handleClose}
               aria-label="Fermer"
-              className="absolute top-5 right-5 text-foreground/40 hover:text-accent bg-secondary/50 hover:bg-secondary p-2 rounded-full transition-all duration-300 z-20"
+              className="absolute top-5 right-5 text-foreground/40 hover:text-accent bg-secondary/50 hover:bg-secondary p-2 rounded-sm transition-all duration-300 z-20"
             >
               <X className="w-4 h-4" />
             </button>
@@ -223,7 +245,7 @@ export default function OrderModal({
                           letterSpacing: formData.adresse ? "0.1em" : "normal",
                           textTransform: formData.adresse ? "uppercase" : "none",
                           color: formData.adresse ? "#e85d04" : "var(--color-muted-foreground)",
-                          fontWeight: formData.adresse ? 700 : 400,
+                          fontWeight: formData.adresse ? 500 : 400,
                         }}
                       >
                         Adresse de livraison <span className="text-accent ml-0.5">*</span>
@@ -234,7 +256,7 @@ export default function OrderModal({
                     <div className="flex items-start gap-3 bg-accent/5 border border-accent/20 p-3 mt-2 rounded-sm">
                       <MessageCircle className="w-4 h-4 text-accent flex-shrink-0 mt-0.5" />
                       <span className="text-[11px] text-foreground/70 leading-relaxed font-medium">
-                        Après confirmation, vous serez redirigé(e) sur <strong>WhatsApp</strong> pour valider votre commande et organiser le paiement de <strong className="text-accent">{acompte}</strong>.
+                        Vous serez redirigé(e) vers la page de paiement sécurisée pour régler l'acompte de <strong className="text-accent">{acompte}</strong>. Un message WhatsApp sera ensuite généré.
                       </span>
                     </div>
 
@@ -246,7 +268,7 @@ export default function OrderModal({
                         onClick={handleRipple}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className="ripple-btn shimmer-sweep w-full flex items-center justify-center gap-3 text-primary-foreground uppercase tracking-[0.2em] text-[10px] py-4 font-bold disabled:opacity-80 transition-all shadow-xl group/btn"
+                        className="ripple-btn shimmer-sweep w-full flex items-center justify-center gap-3 text-primary-foreground uppercase tracking-[0.2em] text-[10px] py-4 font-medium disabled:opacity-80 transition-all group/btn"
                         style={{ background: "linear-gradient(135deg, #154c30, #1a5535)" }}
                       >
                         {isSubmitting ? (
@@ -275,25 +297,25 @@ export default function OrderModal({
                     initial={{ scale: 0, rotate: -180 }}
                     animate={{ scale: 1, rotate: 0 }}
                     transition={{ type: "spring", stiffness: 300, delay: 0.1 }}
-                    className="w-24 h-24 rounded-full bg-accent/10 flex items-center justify-center border border-accent/20 relative"
+                    className="w-24 h-24 rounded-sm bg-accent/10 flex items-center justify-center border border-accent/20 relative"
                   >
-                    <div className="absolute inset-0 rounded-full border border-accent animate-ping opacity-20" />
+                    <div className="absolute inset-0 rounded-sm border border-accent animate-ping opacity-20" />
                     <CheckCircle className="w-12 h-12 text-accent" />
                   </motion.div>
                   <div>
                     <h3 className="font-heading text-3xl text-primary mb-3">
-                      Commande enregistrée
+                      Commande préparée
                     </h3>
                     <p className="text-foreground/60 leading-relaxed text-sm">
-                      Votre bon de commande a été transmis à l'atelier.
+                      Redirection vers le paiement sécurisé Djomy.
                       <br /><br />
-                      <span className="text-accent font-medium px-3 py-1.5 bg-accent/10 rounded-full text-xs uppercase tracking-widest">
-                        Ouverture de WhatsApp...
+                      <span className="text-accent font-medium px-3 py-1.5 bg-accent/10 rounded-sm text-xs uppercase tracking-widest">
+                        Paiement de l'acompte
                       </span>
                     </p>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-foreground/40 mt-2 font-medium">
-                    <MessageCircle className="w-4 h-4" />
+                    <ShoppingBag className="w-4 h-4" />
                     Redirection en cours <span className="animate-pulse">...</span>
                   </div>
                 </motion.div>

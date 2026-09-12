@@ -32,7 +32,7 @@ export default function About() {
       <div className="container mx-auto max-w-7xl px-6 md:px-12">
 
         {/* ── HEADER ─────────────────────────── */}
-        <div className="relative pt-24 pb-24 mb-24 overflow-hidden rounded-[40px] shadow-2xl group">
+        <div className="relative pt-24 pb-24 mb-24 overflow-hidden group">
           <div className="absolute inset-0">
             <img src={heroBg2} alt="Atelier" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000 ease-out" />
             <div className="absolute inset-0" style={{ background: "linear-gradient(to right, rgba(13,51,32,0.9) 0%, rgba(13,51,32,0.7) 100%)" }} />
@@ -40,15 +40,15 @@ export default function About() {
 
           <div className="relative z-10 max-w-5xl px-8 md:px-16 text-white">
             <motion.div initial={{ opacity: 0, y: 20, filter: "blur(8px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ duration: 0.7 }}>
-              <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/10 backdrop-blur-md border border-white/20 text-[10px] uppercase tracking-[0.3em] font-bold mb-10 rounded-full text-white">
-                <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 border border-white/20 text-[10px] uppercase tracking-[0.3em] font-medium mb-10 text-white/80">
+                <span className="w-1.5 h-1.5 rounded-sm bg-accent" />
                 Philosophie & Artisanat
               </div>
             </motion.div>
 
             <h1 className="text-5xl md:text-6xl lg:text-7xl leading-[1.05] mb-12 tracking-tight font-heading font-light" style={{ perspective: "1000px" }}>
               <motion.span variants={wordReveal} custom={0} initial="hidden" animate="visible" className="inline-block mr-4 font-heading font-light">Notre</motion.span>
-              <motion.span variants={wordReveal} custom={1} initial="hidden" animate="visible" className="inline-block mr-4 text-accent italic font-normal text-shadow-glow">passion</motion.span>
+              <motion.span variants={wordReveal} custom={1} initial="hidden" animate="visible" className="inline-block mr-4 text-accent italic font-normal">passion</motion.span>
               <motion.span variants={wordReveal} custom={2} initial="hidden" animate="visible" className="inline-block mr-4 font-heading font-light">pour</motion.span>
               <br />
               <motion.span
@@ -90,7 +90,7 @@ export default function About() {
               className="space-y-8"
             >
               {/* Accent label */}
-              <div className="text-xs uppercase tracking-[0.3em] font-bold" style={{ color: "#e85d04" }}>
+              <div className="text-xs uppercase tracking-[0.3em] font-medium" style={{ color: "#e85d04" }}>
                 — Notre Histoire
               </div>
               <p className="text-lg text-foreground/75 leading-relaxed">
@@ -101,13 +101,13 @@ export default function About() {
               </p>
 
               {/* Client at the center emphasis */}
-              <div className="mt-8 p-6 bg-accent/10 border-l-4 border-accent rounded-r-2xl shadow-sm">
+              <div className="mt-8 p-6 border-l-2 border-accent relative overflow-hidden">
                 <p className="text-xl italic font-heading text-accent leading-relaxed">
                   "Le client est au cœur de tout le projet. Chaque réalisation est pensée et conçue en totale synergie avec vos envies."
                 </p>
               </div>
 
-              {/* Values inline — Enhanced with hover */}
+              {/* Values inline */}
               <div className="grid grid-cols-2 gap-4 pt-6 border-t border-border">
                 {[
                   { label: "Authenticité", val: "100%" },
@@ -115,8 +115,8 @@ export default function About() {
                 ].map((v) => (
                   <motion.div
                     key={v.label}
-                    className="p-5 bg-secondary/60 border border-border/50 hover-lift hover-glow cursor-default"
-                    whileHover={{ scale: 1.03 }}
+                    className="p-5 bg-secondary/40 border border-border/50 cursor-default"
+                    whileHover={{ scale: 1.02 }}
                   >
                     <div className="font-heading text-3xl text-primary mb-1">{v.val}</div>
                     <div className="text-xs uppercase tracking-[0.2em] text-foreground/45">{v.label}</div>
@@ -132,8 +132,7 @@ export default function About() {
                 whileInView={{ clipPath: "inset(0 0% 0 0)", opacity: 1 }}
                 viewport={{ once: true }}
                 transition={{ duration: 1.2, delay: 0.1, ease: [0.76, 0, 0.24, 1] }}
-                className="absolute w-[80%] h-[80%] top-0 right-0 z-10 shadow-2xl overflow-hidden image-shine"
-                style={{ borderRadius: "100px 20px 100px 20px" }}
+                className="absolute w-[80%] h-[80%] top-0 right-0 z-10 border border-border overflow-hidden"
               >
                 <img src={detailWood} alt="Détail de bois noble" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700 animate-ken-burns-reverse" />
                 <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, transparent 60%, rgba(21,76,48,0.25))" }} />
@@ -144,24 +143,23 @@ export default function About() {
                 whileInView={{ clipPath: "inset(0 0 0 0%)", opacity: 1 }}
                 viewport={{ once: true }}
                 transition={{ duration: 1.2, delay: 0.4, ease: [0.76, 0, 0.24, 1] }}
-                className="absolute w-[60%] h-[50%] bottom-0 left-0 shadow-2xl overflow-hidden border-8 border-background image-shine bg-background"
-                style={{ borderRadius: "20px 100px 20px 100px" }}
+                className="absolute w-[60%] h-[50%] bottom-0 left-0 overflow-hidden border-4 border-background bg-background"
               >
                 <img src={aboutWood} alt="Détail de bois" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
               </motion.div>
 
-              {/* Golden accent dot — Enhanced with pulse */}
+              {/* Golden accent block instead of dot */}
               <motion.div
                 initial={{ scale: 0, opacity: 0 }}
                 whileInView={{ scale: 1, opacity: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: 0.9, type: "spring", stiffness: 400 }}
-                className="absolute top-1/2 left-[36%] w-6 h-6 rounded-full z-20 shadow-lg animate-breathe"
-                style={{ background: "linear-gradient(135deg, #e85d04, #f97316)", boxShadow: "0 0 20px rgba(232, 93, 4, 0.4)" }}
+                className="absolute top-1/2 left-[36%] w-4 h-4 z-20"
+                style={{ background: "#e85d04" }}
               />
 
-              {/* Decorative ring */}
-              <div className="absolute top-[10%] right-[-5%] w-24 h-24 rounded-full border border-accent/15 animate-spin-slow" />
+              {/* Decorative block */}
+              <div className="absolute top-[10%] right-[-5%] w-16 h-16 border border-accent/15" />
             </div>
           </div>
         </section>
@@ -171,7 +169,7 @@ export default function About() {
           {/* Background pattern — Enhanced */}
           <div className="absolute inset-0 opacity-[0.015] pointer-events-none" style={{ backgroundImage: "repeating-linear-gradient(45deg, #154c30 0px, #154c30 1px, transparent 0px, transparent 50%)", backgroundSize: "20px 20px" }} />
           {/* Decorative blob */}
-          <div className="absolute top-1/4 right-0 w-80 h-80 rounded-full opacity-[0.03] blur-3xl pointer-events-none animate-morph-blob" style={{ background: "#e85d04" }} />
+          <div className="absolute top-1/4 right-0 w-80 h-80 rounded-sm opacity-[0.03] blur-3xl pointer-events-none animate-morph-blob" style={{ background: "#e85d04" }} />
 
           <div className="grid lg:grid-cols-12 gap-16 items-start relative z-10">
             <div className="lg:col-span-4 lg:sticky lg:top-32">
@@ -181,7 +179,7 @@ export default function About() {
                 viewport={{ once: true }}
                 transition={{ duration: 0.8 }}
               >
-                <span className="text-xs uppercase tracking-[0.3em] font-bold mb-4 block" style={{ color: "#e85d04" }}>Notre Méthode</span>
+                <span className="text-xs uppercase tracking-[0.3em] font-medium mb-4 block" style={{ color: "#e85d04" }}>Notre Méthode</span>
                 <h2 className="text-4xl md:text-5xl font-heading mb-6">De l'idée à la <span className="italic text-gradient-animated">réalité.</span></h2>
                 <p className="text-foreground/55 text-lg mb-8 leading-relaxed">
                   Découvrez les 4 étapes de notre processus de création, de l'idée à la réalisation de votre meuble.
@@ -191,7 +189,7 @@ export default function About() {
                 {/* CTA */}
                 <Link
                   to="/contact"
-                  className="mt-10 inline-flex items-center gap-2 text-accent text-sm uppercase tracking-[0.2em] font-bold group"
+                  className="mt-10 inline-flex items-center gap-2 text-accent text-sm uppercase tracking-[0.2em] font-medium group"
                 >
                   Démarrer votre projet
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform duration-300" />
@@ -219,7 +217,7 @@ export default function About() {
                     viewport={{ once: true }}
                     transition={{ delay: index * 0.2, duration: 0.7, ease: "easeOut" }}
                     whileHover={{ x: 8, scale: 1.01 }}
-                    className="bg-card border border-border p-8 md:p-10 flex flex-col md:flex-row gap-8 hover:shadow-2xl hover:shadow-accent/5 transition-all duration-500 group relative overflow-hidden ml-20 hover-glow rounded-[40px]"
+                    className="bg-card border border-border p-6 md:p-8 flex flex-col md:flex-row gap-6 hover:border-accent/30 transition-all duration-500 group relative overflow-hidden ml-20"
                   >
                     {/* Left colored marker — animated on hover */}
                     <motion.div
@@ -233,34 +231,33 @@ export default function About() {
                     <div className="absolute left-0 top-0 w-1 h-full transform scale-y-0 group-hover:scale-y-100 transition-transform origin-top duration-500" style={{ background: item.color }} />
 
                     {/* Subtle gradient bg on hover */}
-                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: `radial-gradient(circle at 0% 50%, ${item.color}08, transparent 60%)` }} />
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: `radial-gradient(circle at 0% 50%, ${item.color}06, transparent 60%)` }} />
 
-                    {/* Circle with step number on the vertical line — Enhanced */}
+                    {/* Circle with step number on the vertical line */}
                     <motion.div
-                      className="absolute -left-[3.75rem] top-8 w-10 h-10 rounded-full flex items-center justify-center border-2 bg-card z-10 shadow-md"
+                      className="absolute -left-[3.75rem] top-6 w-8 h-8 flex items-center justify-center border bg-card z-10"
                       style={{ borderColor: item.color }}
                       whileInView={{ scale: [0.5, 1.2, 1] }}
                       viewport={{ once: true }}
                       transition={{ delay: index * 0.2 + 0.3, duration: 0.6, ease: "easeOut" }}
                     >
-                      <span className="text-xs font-bold" style={{ color: item.color }}>{index + 1}</span>
+                      <span className="text-xs font-medium" style={{ color: item.color }}>{index + 1}</span>
                     </motion.div>
 
                     <div className="flex-shrink-0">
                       <motion.div
-                        className="w-20 h-20 flex items-center justify-center"
+                        className="w-12 h-12 flex items-center justify-center"
                         style={{ background: `${item.color}10` }}
-                        whileHover={{ rotate: 15, scale: 1.15 }}
+                        whileHover={{ rotate: 10, scale: 1.1 }}
                         transition={{ type: "spring", stiffness: 400, damping: 10 }}
                       >
-                        <item.icon className="w-9 h-9" style={{ color: item.color }} />
+                        <item.icon className="w-6 h-6" style={{ color: item.color }} />
                       </motion.div>
-                      <div className="font-heading text-5xl mt-3 select-none transition-opacity duration-500 opacity-[0.08] group-hover:opacity-[0.15]" style={{ color: item.color }}>{item.step}</div>
                     </div>
 
                     <div className="relative z-10">
-                      <h3 className="font-heading text-2xl md:text-3xl mb-4 text-primary group-hover:text-accent transition-colors duration-300">{item.title}</h3>
-                      <p className="text-foreground/60 leading-relaxed text-lg">{item.desc}</p>
+                      <h3 className="font-heading text-xl md:text-2xl mb-3 text-primary group-hover:text-accent transition-colors duration-300">{item.title}</h3>
+                      <p className="text-foreground/60 leading-relaxed">{item.desc}</p>
                     </div>
                   </motion.div>
                 ))}

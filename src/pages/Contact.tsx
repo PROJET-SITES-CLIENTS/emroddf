@@ -39,7 +39,7 @@ function FloatingInput({
           letterSpacing: active ? "0.1em" : "normal",
           textTransform: active ? "uppercase" : "none",
           color: focused ? "#e85d04" : active ? "#e85d0480" : "var(--color-muted-foreground)",
-          fontWeight: active ? 700 : 400,
+          fontWeight: active ? 500 : 400,
         }}
       >
         {label} {required && <span className="text-accent ml-0.5">*</span>}
@@ -82,7 +82,7 @@ function FloatingTextarea({
           letterSpacing: active ? "0.1em" : "normal",
           textTransform: active ? "uppercase" : "none",
           color: focused ? "#e85d04" : active ? "#e85d0480" : "var(--color-muted-foreground)",
-          fontWeight: active ? 700 : 400,
+          fontWeight: active ? 500 : 400,
         }}
       >
         {label}
@@ -100,7 +100,7 @@ function AccordionItem({ q, a, index }: { q: string; a: string; index: number })
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true }}
       transition={{ delay: index * 0.12, duration: 0.6 }}
-      className="border border-border overflow-hidden bg-card transition-all duration-300 hover:border-accent/30 relative group rounded-3xl mb-4"
+      className="border-b border-border overflow-hidden bg-card transition-all duration-300 hover:border-accent/30 relative group"
     >
       {/* Animated side bar indicator */}
       <motion.div 
@@ -119,7 +119,7 @@ function AccordionItem({ q, a, index }: { q: string; a: string; index: number })
         <motion.div
           animate={{ rotate: open ? 180 : 0, backgroundColor: open ? "#e85d04" : "transparent", color: open ? "#fff" : "var(--color-foreground)" }}
           transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="flex-shrink-0 w-8 h-8 flex items-center justify-center border rounded-full transition-all"
+          className="flex-shrink-0 w-8 h-8 flex items-center justify-center border rounded-sm transition-all"
           style={{ borderColor: open ? "#e85d04" : "var(--color-border)" }}
         >
           <ChevronDown className="w-4 h-4" />
@@ -211,14 +211,14 @@ export default function Contact() {
       
       {/* Background Ambience */}
       <div className="absolute inset-0 pointer-events-none z-0">
-        <div className="absolute top-[10%] left-[-5%] w-[600px] h-[600px] rounded-full opacity-5 blur-[100px] animate-morph-blob" style={{ background: "radial-gradient(circle, #e85d04, transparent)" }} />
-        <div className="absolute bottom-[20%] right-[-10%] w-[800px] h-[800px] rounded-full opacity-[0.03] blur-[120px] animate-float-slow" style={{ background: "radial-gradient(circle, #11522f, transparent)" }} />
+        <div className="absolute top-[10%] left-[-5%] w-[600px] h-[600px] opacity-[0.02]" style={{ background: "radial-gradient(circle, #e85d04, transparent)" }} />
+        <div className="absolute bottom-[20%] right-[-10%] w-[800px] h-[800px] opacity-[0.01]" style={{ background: "radial-gradient(circle, #11522f, transparent)" }} />
       </div>
 
       <div className="container mx-auto max-w-7xl px-6 md:px-12 relative z-10">
 
         {/* ── PAGE HEADER ──────────────────────── */}
-        <div className="relative pt-24 pb-24 mb-16 overflow-hidden rounded-[40px] shadow-2xl group">
+        <div className="relative pt-24 pb-20 mb-16 overflow-hidden group">
           <div className="absolute inset-0">
             <img src="/gallery/IMG-20260531-WA0042.jpg" alt="Contact Header" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000 ease-out animate-ken-burns" />
             <div className="absolute inset-0" style={{ background: "linear-gradient(to right, rgba(232,93,4,0.8) 0%, rgba(232,93,4,0.4) 100%)" }} />
@@ -226,11 +226,11 @@ export default function Contact() {
 
           <div className="relative z-10 max-w-5xl px-8 md:px-16 text-white">
             <motion.div initial={{ opacity: 0, y: -20, filter: "blur(8px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ duration: 0.9, ease: [0.76, 0, 0.24, 1] }}>
-              <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/10 backdrop-blur-md border border-white/20 text-[10px] uppercase tracking-[0.3em] font-bold mb-8 rounded-full text-white">
-                <Sparkles className="w-3.5 h-3.5 text-accent animate-sparkle" />
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 border border-white/20 text-[10px] uppercase tracking-[0.3em] font-medium mb-8 text-white/80">
+                <span className="w-1.5 h-1.5 rounded-sm bg-white/60" />
                 Parlons de votre projet
               </div>
-              <h1 className="text-5xl md:text-7xl lg:text-8xl font-heading mb-6 tracking-tight text-white drop-shadow-lg">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-heading mb-6 tracking-tight text-white">
                 Contactez<motion.span
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -238,7 +238,7 @@ export default function Contact() {
                   className="text-gradient-animated italic font-light ml-1"
                 >-nous.</motion.span>
               </h1>
-              <p className="text-lg md:text-xl text-white/80 leading-relaxed font-light max-w-xl drop-shadow-md">
+              <p className="text-lg text-white/80 leading-relaxed font-light max-w-xl">
                 Nous sommes à votre écoute pour créer le meuble de vos rêves.
               </p>
             </motion.div>
@@ -254,13 +254,13 @@ export default function Contact() {
             transition={{ duration: 0.9, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
             className="lg:col-span-5 space-y-8"
           >
-            <div className="bg-secondary/40 p-10 md:p-12 border-l-4 relative overflow-hidden group shadow-lg rounded-[40px]" style={{ borderColor: "#e85d04" }}>
+            <div className="bg-secondary/30 p-8 md:p-10 border-l-2 relative overflow-hidden group" style={{ borderColor: "#e85d04" }}>
               {/* Hover shimmer wipe */}
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" style={{ background: "linear-gradient(135deg, rgba(232,93,4,0.08) 0%, transparent 50%)" }} />
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" style={{ background: "linear-gradient(135deg, rgba(232,93,4,0.05) 0%, transparent 50%)" }} />
               
-              <h3 className="font-heading text-3xl md:text-4xl mb-10 text-primary relative z-10">L'Atelier EMROD</h3>
+              <h3 className="font-heading text-2xl md:text-3xl mb-8 text-primary relative z-10">L'Atelier EMROD</h3>
               
-              <ul className="space-y-8 relative z-10">
+              <ul className="space-y-6 relative z-10">
                 {[
                   { icon: MapPin, label: "Adresse", content: "T7, Corniche Nord\nvirage du lac Sonfonia Centre\n(Carrefour Canal Plus)\nConakry, Guinée" },
                   { icon: Phone, label: "Téléphones", content: "+224 623 88 59 59\n+224 621 08 41 46" },
@@ -272,14 +272,12 @@ export default function Contact() {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.4 + (i * 0.1) }}
-                    className="flex items-start gap-5 transition-transform group/item relative p-3 -mx-3 rounded-lg hover:bg-card/50"
+                    className="flex items-start gap-4 transition-transform group/item relative"
                   >
-                    <div className="w-12 h-12 flex items-center justify-center flex-shrink-0 mt-0.5 rounded-full shadow-sm transition-all duration-300 group-hover/item:scale-110 group-hover/item:shadow-md" style={{ background: "rgba(232,93,4,0.1)" }}>
-                      <Icon className="w-5 h-5 transition-colors duration-300" style={{ color: "#e85d04" }} />
-                    </div>
+                    <Icon className="w-4 h-4 flex-shrink-0 mt-1 transition-colors duration-300" style={{ color: "#e85d04" }} />
                     <div>
-                      <h4 className="font-bold uppercase tracking-[0.2em] text-[10px] text-foreground/50 mb-2 group-hover/item:text-accent transition-colors">{label}</h4>
-                      <p className="text-sm md:text-base leading-relaxed text-foreground/80 whitespace-pre-line font-medium">{content}</p>
+                      <h4 className="font-medium uppercase tracking-[0.2em] text-[9px] text-foreground/40 mb-1 group-hover/item:text-accent transition-colors">{label}</h4>
+                      <p className="text-sm leading-relaxed text-foreground/80 whitespace-pre-line">{content}</p>
                     </div>
                   </motion.li>
                 ))}
@@ -291,7 +289,7 @@ export default function Contact() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.6, duration: 0.8 }}
-              className="relative aspect-[4/5] w-full overflow-hidden border border-border shadow-xl group rounded-[40px]"
+              className="relative aspect-[4/5] w-full overflow-hidden border border-border group"
             >
               <img
                 src={contactBg}
@@ -299,7 +297,7 @@ export default function Contact() {
                 className="absolute w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000 ease-out"
               />
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700" style={{ background: "linear-gradient(to top, rgba(13,51,32,0.8), transparent 70%)" }} />
-              <div className="absolute bottom-6 left-6 text-white/0 group-hover:text-white transition-colors duration-700 text-xs uppercase tracking-[0.3em] font-bold translate-y-4 group-hover:translate-y-0">
+              <div className="absolute bottom-6 left-6 text-white/0 group-hover:text-white transition-colors duration-700 text-xs uppercase tracking-[0.3em] font-medium translate-y-4 group-hover:translate-y-0">
                 Notre Atelier
               </div>
             </motion.div>
@@ -312,12 +310,12 @@ export default function Contact() {
             transition={{ duration: 0.9, delay: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
             className="lg:col-span-7"
           >
-            <div className="bg-card/90 backdrop-blur-xl p-8 md:p-14 border border-border/60 shadow-2xl relative overflow-hidden rounded-[40px] glass-card">
+            <div className="bg-card p-8 md:p-10 border border-border relative overflow-hidden">
               {/* Subtle background glow */}
-              <div className="absolute top-0 right-0 w-[400px] h-[400px] rounded-full opacity-[0.03] blur-[80px] pointer-events-none animate-pulse" style={{ background: "radial-gradient(circle, #e85d04, transparent)" }} />
+              <div className="absolute top-0 right-0 w-[400px] h-[400px] opacity-[0.01] pointer-events-none" style={{ background: "radial-gradient(circle, #e85d04, transparent)" }} />
 
-              <h3 className="font-heading text-3xl md:text-5xl mb-4 relative z-10 text-primary">Confiez-nous votre idée</h3>
-              <p className="text-foreground/60 mb-10 relative z-10 text-lg">Remplissez ce formulaire et la créatrice vous rappellera personnellement sous 48h.</p>
+              <h3 className="font-heading text-2xl md:text-3xl mb-3 relative z-10 text-primary">Confiez-nous votre idée</h3>
+              <p className="text-foreground/55 mb-8 relative z-10 text-base">Remplissez ce formulaire et la créatrice vous rappellera personnellement sous 48h.</p>
 
               <AnimatePresence mode="wait">
                 {success ? (
@@ -333,10 +331,10 @@ export default function Contact() {
                       initial={{ scale: 0, rotate: -180 }}
                       animate={{ scale: 1, rotate: 0 }}
                       transition={{ delay: 0.2, type: "spring", stiffness: 300 }}
-                      className="w-32 h-32 mx-auto rounded-full flex items-center justify-center mb-8 relative"
+                      className="w-32 h-32 mx-auto rounded-sm flex items-center justify-center mb-8 relative"
                       style={{ background: "radial-gradient(circle, rgba(232,93,4,0.1) 0%, transparent 70%)" }}
                     >
-                      <div className="absolute inset-0 rounded-full border border-accent/20 animate-ping" />
+                      <div className="absolute inset-0 rounded-sm border border-accent/20 animate-ping" />
                       <CheckCircle2 className="w-16 h-16" style={{ color: "#e85d04" }} />
                     </motion.div>
                     <h4 className="text-4xl text-primary font-heading mb-4">Demande Envoyée</h4>
@@ -397,7 +395,7 @@ export default function Contact() {
                           letterSpacing: formData.serviceType || selectFocused ? "0.1em" : "normal",
                           textTransform: formData.serviceType || selectFocused ? "uppercase" : "none",
                           color: selectFocused ? "#e85d04" : formData.serviceType ? "#e85d0480" : "var(--color-muted-foreground)",
-                          fontWeight: formData.serviceType || selectFocused ? 700 : 400,
+                          fontWeight: formData.serviceType || selectFocused ? 500 : 400,
                         }}
                       >
                         Objet de la demande <span className="text-accent ml-0.5">*</span>
@@ -418,12 +416,12 @@ export default function Contact() {
                         whileTap={{ scale: 0.98 }}
                         disabled={isSubmitting}
                         onClick={handleRipple}
-                        className="ripple-btn shimmer-sweep w-full text-primary-foreground py-5 flex items-center justify-center gap-3 uppercase tracking-[0.2em] text-[10px] font-bold disabled:opacity-80 shadow-2xl transition-all relative overflow-hidden group/btn"
+                        className="ripple-btn shimmer-sweep w-full text-primary-foreground py-4 flex items-center justify-center gap-3 uppercase tracking-[0.2em] text-[10px] font-medium disabled:opacity-80 transition-all relative overflow-hidden group/btn"
                         style={{ background: "linear-gradient(135deg, #e85d04, #b84600)" }}
                       >
                         {isSubmitting ? (
                           <>
-                            <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                            <div className="w-4 h-4 rounded-sm border-2 border-white/30 border-t-white animate-spin" />
                             <span className="tracking-[0.3em]">Envoi en cours...</span>
                           </>
                         ) : (
@@ -458,7 +456,7 @@ export default function Contact() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
-            className="w-full h-[400px] md:h-[500px] rounded-[40px] overflow-hidden border border-border shadow-2xl relative group"
+            className="w-full h-[400px] md:h-[500px] overflow-hidden border border-border relative group"
           >
             <div className="absolute inset-0 pointer-events-none z-10 shadow-[inset_0_0_50px_rgba(0,0,0,0.1)] transition-colors duration-500 group-hover:shadow-[inset_0_0_0px_rgba(0,0,0,0)]" />
             <iframe
@@ -482,7 +480,7 @@ export default function Contact() {
               viewport={{ once: true }}
               className="text-center mb-16"
             >
-              <div className="text-xs uppercase tracking-[0.3em] font-bold mb-4" style={{ color: "#e85d04" }}>— Clarifications —</div>
+              <div className="text-xs uppercase tracking-[0.3em] font-medium mb-4" style={{ color: "#e85d04" }}>— Clarifications —</div>
               <h2 className="text-4xl md:text-5xl font-heading text-primary">Questions <span className="italic text-gradient-animated font-light">Fréquentes</span></h2>
             </motion.div>
 

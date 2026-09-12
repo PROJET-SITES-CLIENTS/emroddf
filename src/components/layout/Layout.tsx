@@ -31,7 +31,7 @@ function FloatingSparkles() {
       {[...Array(6)].map((_, i) => (
         <div
           key={i}
-          className="absolute w-1 h-1 rounded-full animate-sparkle-drift"
+          className="absolute w-1 h-1 rounded-sm animate-sparkle-drift"
           style={{
             background: i % 2 === 0 ? "#e85d04" : "#11522f",
             left: `${15 + i * 15}%`,
@@ -110,7 +110,6 @@ export default function Layout() {
                 backdropFilter: "blur(24px) saturate(180%)",
                 WebkitBackdropFilter: "blur(24px) saturate(180%)",
                 borderBottom: "1px solid rgba(226, 222, 213, 0.5)",
-                boxShadow: "0 4px 30px rgba(0, 0, 0, 0.04), 0 1px 6px rgba(232, 93, 4, 0.03)",
               }
             : undefined
         }
@@ -126,10 +125,6 @@ export default function Layout() {
               }`}
               whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 300 }}
-            />
-            {/* Subtle golden shimmer on logo hover */}
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-lg pointer-events-none"
-              style={{ boxShadow: "0 0 30px rgba(232, 93, 4, 0.1)" }}
             />
           </Link>
 
@@ -149,7 +144,7 @@ export default function Layout() {
                 {link.name}
                 {/* Animated underline */}
                 <motion.span
-                  className="absolute bottom-0 left-2 right-2 h-[2px] rounded-full"
+                  className="absolute bottom-0 left-2 right-2 h-[1px]"
                   initial={false}
                   animate={{
                     scaleX: isActive(link.path) || hoveredNav === link.path ? 1 : 0,
@@ -158,8 +153,7 @@ export default function Layout() {
                   transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
                   style={{
                     originX: 0,
-                    background: "linear-gradient(90deg, #e85d04, #f97316)",
-                    boxShadow: isActive(link.path) ? "0 0 8px rgba(232, 93, 4, 0.3)" : "none",
+                    background: "#e85d04",
                   }}
                 />
               </Link>
@@ -168,7 +162,7 @@ export default function Layout() {
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }} className="ml-3">
               <Link
                 to="/contact"
-                className="shimmer-sweep inline-flex items-center gap-2 px-5 py-2.5 text-primary-foreground text-[10px] uppercase tracking-[0.2em] font-bold transition-all duration-300 shadow-lg hover:shadow-accent/25 hover:shadow-xl"
+                className="shimmer-sweep rounded-sm inline-flex items-center gap-2 px-5 py-2.5 text-primary-foreground text-[10px] uppercase tracking-[0.2em] font-medium transition-all duration-300 border border-transparent hover:border-accent/40"
                 style={{ background: "linear-gradient(135deg, #11522f, #154c30)" }}
               >
                 Devis gratuit
@@ -178,7 +172,7 @@ export default function Layout() {
           </nav>
 
           <button
-            className="md:hidden p-2.5 hover:bg-secondary/80 transition-colors rounded-lg"
+            className="md:hidden p-2.5 hover:bg-secondary/80 transition-colors rounded-sm"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Menu"
           >
@@ -203,11 +197,8 @@ export default function Layout() {
             className="fixed inset-0 z-40 flex flex-col items-center justify-center gap-8"
             style={{ background: "linear-gradient(135deg, #0d3320 0%, #154c30 60%, #1e4a2a 100%)" }}
           >
-            {/* Animated decorative elements - Static for performance */}
-            <div className="absolute top-1/4 right-1/4 w-64 h-64 rounded-full border border-white/5" />
-            <div className="absolute bottom-1/4 left-1/4 w-48 h-48 rounded-full border border-accent/10" />
             {/* Decorative blob */}
-            <div className="absolute top-1/3 left-1/3 w-80 h-80 rounded-full opacity-[0.02]" style={{ background: "radial-gradient(circle, #e85d04, transparent)" }} />
+            <div className="absolute top-1/3 left-1/3 w-80 h-80 opacity-[0.02]" style={{ background: "radial-gradient(circle, #e85d04, transparent)" }} />
 
             {navLinks.map((link, i) => (
               <motion.div
@@ -218,6 +209,7 @@ export default function Layout() {
               >
                 <Link
                   to={link.path}
+                  onClick={() => setIsMobileMenuOpen(false)}
                   className={`text-3xl md:text-4xl font-heading hover:text-accent transition-all duration-300 ${
                     isActive(link.path) ? "text-accent" : "text-white/90"
                   }`}
@@ -251,10 +243,10 @@ export default function Layout() {
           <h3 className="font-heading text-2xl md:text-3xl mb-12 text-primary">Ils nous font <span className="italic text-accent">confiance</span></h3>
           <div className="flex flex-wrap justify-center items-center gap-12 md:gap-24 opacity-60 hover:opacity-100 transition-all duration-500">
             {/* Dummy partner logos for now */}
-            <div className="flex items-center justify-center font-heading text-xl md:text-2xl font-bold tracking-widest text-foreground/50 hover:text-primary transition-colors">PARTENAIRE 1</div>
-            <div className="flex items-center justify-center font-heading text-xl md:text-2xl font-bold tracking-widest text-foreground/50 hover:text-primary transition-colors">PARTENAIRE 2</div>
-            <div className="flex items-center justify-center font-heading text-xl md:text-2xl font-bold tracking-widest text-foreground/50 hover:text-primary transition-colors">PARTENAIRE 3</div>
-            <div className="flex items-center justify-center font-heading text-xl md:text-2xl font-bold tracking-widest text-foreground/50 hover:text-primary transition-colors">PARTENAIRE 4</div>
+            <div className="flex items-center justify-center font-heading text-xl md:text-2xl font-medium tracking-widest text-foreground/50 hover:text-primary transition-colors">PARTENAIRE 1</div>
+            <div className="flex items-center justify-center font-heading text-xl md:text-2xl font-medium tracking-widest text-foreground/50 hover:text-primary transition-colors">PARTENAIRE 2</div>
+            <div className="flex items-center justify-center font-heading text-xl md:text-2xl font-medium tracking-widest text-foreground/50 hover:text-primary transition-colors">PARTENAIRE 3</div>
+            <div className="flex items-center justify-center font-heading text-xl md:text-2xl font-medium tracking-widest text-foreground/50 hover:text-primary transition-colors">PARTENAIRE 4</div>
           </div>
         </div>
       </section>
@@ -287,9 +279,9 @@ export default function Layout() {
       {/* ── Footer ───────────────────────────── */}
       <footer className="relative overflow-hidden" style={{ background: "linear-gradient(135deg, #0d3320 0%, #154c30 70%, #1a5535 100%)" }}>
         {/* Decorative orbs — Static for maximum performance */}
-        <div className="absolute top-0 right-0 w-96 h-96 rounded-full opacity-[0.02] pointer-events-none" style={{ background: "radial-gradient(circle, #e85d04, transparent)" }} />
-        <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full opacity-[0.02] pointer-events-none" style={{ background: "radial-gradient(circle, #11522f, transparent)" }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full opacity-[0.01] pointer-events-none" style={{ background: "radial-gradient(circle, #e85d04, transparent)" }} />
+        <div className="absolute top-0 right-0 w-96 h-96 opacity-[0.02] pointer-events-none" style={{ background: "radial-gradient(circle, #e85d04, transparent)" }} />
+        <div className="absolute bottom-0 left-0 w-64 h-64 opacity-[0.02] pointer-events-none" style={{ background: "radial-gradient(circle, #11522f, transparent)" }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] opacity-[0.01] pointer-events-none" style={{ background: "radial-gradient(circle, #e85d04, transparent)" }} />
 
         {/* Subtle pattern overlay */}
         <div className="absolute inset-0 opacity-[0.015] pointer-events-none" style={{ backgroundImage: "repeating-linear-gradient(45deg, #ffffff 0px, #ffffff 1px, transparent 0px, transparent 50%)", backgroundSize: "24px 24px" }} />
@@ -392,7 +384,7 @@ export default function Layout() {
             {/* Mini CTA in footer */}
             <Link
               to="/contact"
-              className="mt-8 inline-flex items-center gap-2 px-5 py-3 text-[10px] uppercase tracking-[0.2em] font-bold text-accent-foreground transition-all hover:scale-105 hover:shadow-lg hover:shadow-accent/20 shimmer-sweep"
+              className="mt-8 inline-flex items-center gap-2 px-5 py-3 text-[10px] uppercase tracking-[0.2em] font-medium text-accent-foreground transition-all shimmer-sweep border border-accent/20 hover:border-accent rounded-sm"
               style={{ background: "linear-gradient(135deg, #e85d04, #b84600)" }}
             >
               Démarrer un projet
@@ -408,7 +400,7 @@ export default function Layout() {
               © {new Date().getFullYear()} EMROD SARL — Mobilier Sur-Mesure
             </p>
             <div className="flex items-center gap-4">
-              <div className="w-1 h-1 rounded-full bg-accent/40 animate-pulse" />
+              <div className="w-1 h-1 rounded-sm bg-accent/40 animate-pulse" />
               <p className="text-xs text-white/18 tracking-[0.15em]">
                 Conakry · Guinée
               </p>

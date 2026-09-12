@@ -1,7 +1,7 @@
 import { motion, useScroll, useTransform, Variants, AnimatePresence } from "motion/react";
 import { Link } from "react-router-dom";
 import { Star, CheckCircle, ShieldCheck, Gem, ArrowRight, Quote, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
-import { fetchGallery, GalleryImage, fetchCatalogUrl } from "../lib/api";
+import { fetchGalleryImages, GalleryImage, fetchCatalogUrl } from "../lib/api";
 import { useRef, useState, useEffect } from "react";
 import heroBg from "../assets/images/hero-bg.jpg";
 import aboutArtisan from "../assets/images/about-artisan.jpg";
@@ -129,7 +129,7 @@ function TestimonialCarousel() {
           initial="enter"
           animate="center"
           exit="exit"
-          className="bg-card p-10 md:p-14 shadow-2xl border border-border/50 relative overflow-hidden min-h-[280px] hover-glow rounded-[40px]"
+          className="bg-card p-8 md:p-12 border border-border relative overflow-hidden min-h-[260px] hover-glow"
         >
           {/* Accent corners — animated */}
           <motion.div 
@@ -190,7 +190,7 @@ function TestimonialCarousel() {
             <button
               key={i}
               onClick={() => go(i)}
-              className={`transition-all duration-300 rounded-full ${i === current ? "w-10 h-2.5" : "w-2.5 h-2.5 hover:bg-accent/50"}`}
+              className={`transition-all duration-300 rounded-sm ${i === current ? "w-10 h-2.5" : "w-2.5 h-2.5 hover:bg-accent/50"}`}
               style={{ background: i === current ? "linear-gradient(90deg, #e85d04, #f97316)" : undefined, backgroundColor: i !== current ? "var(--color-border)" : undefined }}
               aria-label={`Témoignage ${i + 1}`}
             />
@@ -285,8 +285,8 @@ export default function Home() {
 
         {/* Lightweight decorative static elements */}
         <div className="absolute inset-0 z-0 pointer-events-none">
-          <div className="absolute top-1/4 right-1/4 w-[400px] h-[400px] rounded-full opacity-[0.03] blur-3xl" style={{ background: "#e85d04" }} />
-          <div className="absolute bottom-1/4 left-1/4 w-[300px] h-[300px] rounded-full opacity-[0.02] blur-3xl" style={{ background: "#f97316" }} />
+          <div className="absolute top-1/4 right-1/4 w-[400px] h-[400px] opacity-[0.03]" style={{ background: "radial-gradient(circle, #e85d04, transparent)" }} />
+          <div className="absolute bottom-1/4 left-1/4 w-[300px] h-[300px] opacity-[0.02]" style={{ background: "radial-gradient(circle, #f97316, transparent)" }} />
         </div>
 
         {/* Content */}
@@ -295,22 +295,22 @@ export default function Home() {
             <motion.div initial="hidden" animate="visible" variants={staggerContainer} className="flex flex-col items-center">
               
               {/* Badge */}
-              <motion.div variants={fadeUp} className="inline-flex items-center justify-center gap-2.5 px-6 py-3 mb-10 relative bg-black/20 backdrop-blur-md rounded-full border border-white/20 shadow-2xl">
-                <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-                <span className="text-[10px] sm:text-xs uppercase tracking-[0.3em] font-bold text-white drop-shadow-md">
+              <motion.div variants={fadeUp} className="inline-flex items-center justify-center gap-2.5 px-6 py-3 mb-10 relative bg-black/20 backdrop-blur-md rounded-sm border border-white/20">
+                <span className="w-2 h-2 rounded-sm bg-accent animate-pulse" />
+                <span className="text-[10px] sm:text-xs uppercase tracking-[0.3em] font-medium text-white">
                   Sur mesure / Fait par des femmes
                 </span>
               </motion.div>
 
               {/* Title */}
               <motion.div variants={fadeUp} className="mb-8 w-full">
-                <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl leading-[1.05] tracking-tight font-heading font-light text-white drop-shadow-2xl">
+                <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl leading-[1.05] tracking-tight font-heading font-light text-white">
                   <span className="block mb-2">Des meubles uniques,</span>
-                  <span className="text-accent italic font-normal text-gradient-animated block drop-shadow-lg">sur mesure.</span>
+                  <span className="text-accent italic font-normal text-gradient-animated block">sur mesure.</span>
                 </h1>
               </motion.div>
 
-              <motion.p variants={fadeUp} className="text-lg md:text-xl lg:text-2xl text-white/85 mb-12 max-w-2xl leading-relaxed tracking-wide font-light drop-shadow-md">
+              <motion.p variants={fadeUp} className="text-lg md:text-xl lg:text-2xl text-white/85 mb-12 max-w-2xl leading-relaxed tracking-wide font-light">
                 Créés par des femmes pour votre intérieur. Nous créons des meubles solides et beaux, en mélangeant le travail à la main et des idées modernes.
               </motion.p>
 
@@ -359,12 +359,12 @@ export default function Home() {
         >
           <span className="text-[10px] uppercase tracking-[0.3em] text-white/50 font-bold drop-shadow-md">Défiler</span>
           <motion.div
-            className="w-5 h-9 border-2 border-white/30 rounded-full flex items-start justify-center pt-1.5"
+            className="w-5 h-9 border-2 border-white/30 rounded-sm flex items-start justify-center pt-1.5"
             animate={{ borderColor: ["rgba(255,255,255,0.2)", "rgba(232,93,4,0.5)", "rgba(255,255,255,0.2)"] }}
             transition={{ duration: 3, repeat: Infinity }}
           >
             <motion.div
-              className="w-1 h-2.5 rounded-full bg-accent"
+              className="w-1 h-2.5 rounded-sm bg-accent"
               animate={{ y: [0, 12, 0], opacity: [1, 0.3, 1] }}
               transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
             />
@@ -420,7 +420,7 @@ export default function Home() {
             variants={staggerContainer}
             className="text-center max-w-3xl mx-auto mb-20"
           >
-            <motion.div variants={fadeUp} className="inline-block text-xs uppercase tracking-[0.3em] font-bold text-accent mb-4">
+            <motion.div variants={fadeUp} className="inline-block text-xs uppercase tracking-[0.3em] font-medium text-accent mb-4">
               — Notre Engagement —
             </motion.div>
             <motion.h2 variants={fadeUp} className="text-4xl md:text-5xl font-heading mb-6 tracking-tight">
@@ -444,7 +444,7 @@ export default function Home() {
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ delay: i * 0.15, duration: 0.7, ease: "easeOut" }}
                 whileHover={{ y: -14, scale: 1.03, rotateY: 3 }}
-                className="group bg-card border border-border p-10 hover:border-accent/40 transition-all duration-500 relative overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-accent/10 cursor-pointer rounded-[40px]"
+                className="group bg-card border border-border p-8 hover:border-accent/40 transition-all duration-500 relative overflow-hidden cursor-pointer"
                 style={{ transformStyle: "preserve-3d", perspective: "800px" }}
               >
                 {/* Gradient overlay on hover */}
@@ -461,19 +461,19 @@ export default function Home() {
                 />
 
                 {/* Watermark number — slide up on hover */}
-                <div className="absolute -bottom-4 -right-2 font-heading text-8xl font-bold opacity-0 group-hover:opacity-[0.06] group-hover:-translate-y-4 transition-all duration-700 pointer-events-none select-none text-foreground">
+                <div className="absolute -bottom-4 -right-2 font-heading text-8xl font-medium opacity-0 group-hover:opacity-[0.06] group-hover:-translate-y-4 transition-all duration-700 pointer-events-none select-none text-foreground">
                   {item.num}
                 </div>
 
                 {/* Icon with elastic pop on hover */}
                 <motion.div 
-                  className="w-16 h-16 mb-8 flex items-center justify-center relative"
+                  className="w-10 h-10 mb-6 flex items-center justify-center relative"
                   whileHover={{ rotate: 15, scale: 1.2 }}
                   transition={{ type: "spring", stiffness: 400, damping: 10 }}
                 >
-                  <div className="absolute inset-0 rounded-full opacity-10 group-hover:opacity-25 transition-all duration-500 group-hover:scale-125" style={{ background: item.color }} />
+                  <div className="absolute inset-0 rounded-sm opacity-10 group-hover:opacity-25 transition-all duration-500 group-hover:scale-125" style={{ background: item.color }} />
                   <item.icon
-                    className="w-8 h-8 transition-all duration-500"
+                    className="w-5 h-5 transition-all duration-500"
                     style={{ color: item.color }}
                   />
                 </motion.div>
@@ -513,7 +513,7 @@ export default function Home() {
                 className="text-center group"
               >
                 <motion.div
-                  className="font-heading text-5xl md:text-6xl font-bold mb-3"
+                  className="font-heading text-4xl md:text-5xl font-light mb-3"
                   style={{ color: i % 2 === 0 ? "#154c30" : "#e85d04" }}
                   whileHover={{ scale: 1.1 }}
                   transition={{ type: "spring", stiffness: 300 }}
@@ -558,7 +558,7 @@ export default function Home() {
             >
               {/* Clip-path reveal animation */}
               <motion.div
-                className="w-full h-full overflow-hidden shadow-2xl relative z-10 image-shine"
+                className="w-full h-full overflow-hidden border border-border relative z-10"
                 initial={{ clipPath: "inset(0 100% 0 0)" }}
                 whileInView={{ clipPath: "inset(0 0% 0 0)" }}
                 viewport={{ once: true }}
@@ -596,7 +596,7 @@ export default function Home() {
               transition={{ delay: 0.3, duration: 1.2, ease: [0.25, 0.46, 0.45, 0.94] }}
             >
               <motion.div
-                className="uppercase tracking-[0.3em] text-xs font-bold mb-6"
+                className="uppercase tracking-[0.3em] text-xs font-medium mb-6"
                 style={{ color: "#e85d04" }}
                 initial={{ opacity: 0, x: -20 }}
                 whileInView={{ opacity: 1, x: 0 }}
@@ -626,7 +626,7 @@ export default function Home() {
                     transition={{ delay: 0.7 + i * 0.1 }}
                     whileHover={{ scale: 1.1 }}
                   >
-                    <div className="font-heading text-3xl font-bold" style={{ color: "#e85d04" }}>{s.v}</div>
+                    <div className="font-heading text-3xl font-medium" style={{ color: "#e85d04" }}>{s.v}</div>
                     <div className="text-xs uppercase tracking-[0.2em] mt-1" style={{ color: "rgba(255,255,255,0.35)" }}>{s.l}</div>
                   </motion.div>
                 ))}
@@ -658,7 +658,7 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <div className="text-xs uppercase tracking-[0.3em] font-bold text-accent mb-4">— Inspirations —</div>
+            <div className="text-xs uppercase tracking-[0.3em] font-medium text-accent mb-4">— Inspirations —</div>
             <h2 className="text-4xl md:text-5xl font-heading mb-4 text-primary">Nos plus belles <span className="text-gradient-animated">réalisations</span></h2>
             <p className="text-foreground/55 max-w-2xl mx-auto">Une sélection de nos créations récentes, photographiées chez nos clients ou dans notre atelier.</p>
           </motion.div>
@@ -676,8 +676,7 @@ export default function Home() {
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ delay: (i % 3) * 0.15, duration: 0.7 }}
                 whileHover={{ scale: 1.02, rotate: i % 2 === 0 ? 1 : -1 }}
-                className="relative overflow-hidden group cursor-pointer shadow-xl"
-                style={{ borderRadius: i % 2 === 0 ? "40px 10px 40px 10px" : "10px 40px 10px 40px" }}
+                className="relative overflow-hidden group cursor-pointer border border-border/30"
               >
                 <img src={`/gallery/${img}`} alt="Réalisation EMROD" className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-110" />
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center backdrop-blur-sm" style={{ background: "rgba(21, 76, 48, 0.4)" }}>
@@ -688,7 +687,7 @@ export default function Home() {
           </div>
 
           <div className="text-center mt-16">
-            <Link to="/galerie" className="inline-flex items-center justify-center px-10 py-4 border border-accent text-accent uppercase tracking-widest text-xs font-bold hover:bg-accent hover:text-white transition-all rounded-[30px] hover:shadow-[0_0_20px_rgba(232,93,4,0.3)]">
+            <Link to="/galerie" className="inline-flex items-center justify-center px-8 py-3 border border-accent text-accent uppercase tracking-widest text-xs font-medium hover:bg-accent hover:text-white transition-all">
               Voir toute la galerie
             </Link>
           </div>
@@ -711,7 +710,7 @@ export default function Home() {
             transition={{ duration: 0.8 }}
             className="text-center mb-16 max-w-2xl mx-auto"
           >
-            <div className="text-xs uppercase tracking-[0.3em] font-bold text-accent mb-4">— Ils nous font confiance —</div>
+            <div className="text-xs uppercase tracking-[0.3em] font-medium text-accent mb-4">— Ils nous font confiance —</div>
             <h2 className="text-4xl md:text-5xl font-heading mb-4 text-primary">Confiance <span className="text-gradient-animated">&</span> Excellence</h2>
             <p className="text-foreground/55">La satisfaction de nos clients est la plus belle preuve de notre engagement.</p>
           </motion.div>
@@ -744,8 +743,8 @@ export default function Home() {
 
         {/* Animated orbs — Enhanced */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full opacity-5 blur-3xl animate-float" style={{ background: "radial-gradient(circle, #e85d04, transparent)" }} />
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full opacity-5 blur-3xl animate-float-slow" style={{ background: "radial-gradient(circle, #154c30, transparent)" }} />
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 rounded-sm opacity-5 blur-3xl animate-float" style={{ background: "radial-gradient(circle, #e85d04, transparent)" }} />
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-sm opacity-5 blur-3xl animate-float-slow" style={{ background: "radial-gradient(circle, #154c30, transparent)" }} />
         </div>
 
         <div className="container mx-auto max-w-4xl relative z-10">
@@ -769,7 +768,7 @@ export default function Home() {
                 <Link
                   to="/contact"
                   onClick={handleRipple}
-                  className="ripple-btn shimmer-sweep inline-flex items-center gap-3 px-10 py-5 text-accent-foreground uppercase tracking-[0.2em] text-sm font-bold transition-all shadow-2xl hover:shadow-accent/30 hover:shadow-xl animate-pulse-scale"
+                  className="ripple-btn shimmer-sweep inline-flex items-center gap-3 px-8 py-4 text-accent-foreground uppercase tracking-[0.2em] text-xs font-medium transition-all animate-pulse-scale rounded-sm"
                   style={{ background: "linear-gradient(135deg, #e85d04, #b84600)" }}
                 >
                   Commencer le projet
@@ -779,7 +778,7 @@ export default function Home() {
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Link
                   to="/galerie"
-                  className="inline-flex items-center gap-3 px-10 py-5 border border-border bg-transparent uppercase tracking-[0.2em] text-sm font-bold transition-all hover:border-primary hover:bg-secondary hover-glow"
+                  className="inline-flex items-center gap-3 px-10 py-5 border border-border bg-transparent uppercase tracking-[0.2em] text-sm font-bold transition-all hover:border-primary hover:bg-secondary hover-glow rounded-sm"
                 >
                   Voir la galerie
                   <ArrowRight className="w-5 h-5" />

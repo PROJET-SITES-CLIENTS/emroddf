@@ -5,7 +5,7 @@
   --color-border: #e2ded5;
   --color-input: #e2ded5;
   --color-ring: #11522f;
-  --color-background: #f5f2eb; /* Chaud et sablonneux, effet lin premium */
+  --color-background: #FAF8F5; /* Ivoire chaud ultra-doux — le luxe chuchote */
   --color-foreground: #081a10; /* Vert-noir forestier profond */
 
   --color-primary: #11522f;
@@ -26,7 +26,7 @@
   --color-popover: #ffffff;
   --color-popover-foreground: #081a10;
 
-  --color-card: #ffffff;
+  --color-card: #FCFBF9; /* Blanc légèrement ivoire — pas de blanc pur agressif */
   --color-card-foreground: #081a10;
 
   /* ═══ Nouvelles couleurs premium (exclusivement Vert et Orange) ═══ */
@@ -35,12 +35,13 @@
   --color-copper: #d84a00; /* Orange cuivré soutenu */
   --color-emerald-deep: #072213; /* Vert forêt très sombre */
   --color-cream-warm: #faf9f6; /* Blanc crème doux */
-  --color-accent-glow: rgba(232, 93, 4, 0.18);
-  --color-primary-glow: rgba(17, 82, 47, 0.15);
+  --color-accent-glow: rgba(232, 93, 4, 0.12);
+  --color-primary-glow: rgba(17, 82, 47, 0.10);
 
-  --radius-lg: 1.25rem;
-  --radius-md: 0.875rem;
-  --radius-sm: 0.625rem;
+  /* ═══ Rayons de bordure — précision artisanale, pas de bulles ═══ */
+  --radius-lg: 0px;  /* Angles nets, comme une pièce de bois bien équarrie */
+  --radius-md: 0px;
+  --radius-sm: 0px;
 
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
   --font-heading: 'Cormorant Garamond', ui-serif, Georgia, serif;

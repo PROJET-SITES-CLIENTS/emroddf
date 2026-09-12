@@ -110,10 +110,11 @@ let categoriesCache: string[] | null = null;
 
 /**
  * Returns the direct URL to display an image from Google Drive.
+ * We use w500 by default for faster loading in grids. Use w1000 for full-screen.
  */
-export function getImageUrl(fileId: string) {
+export function getImageUrl(fileId: string, size: number = 500) {
   // Use the thumbnail API which is much more reliable for embedding images and doesn't trigger 403 as often
-  return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
+  return `https://drive.google.com/thumbnail?id=${fileId}&sz=w${size}`;
 }
 
 export async function fetchCatalogUrl(): Promise<string | null> {
@@ -138,7 +139,7 @@ export async function fetchCategoriesList(): Promise<string[]> {
   const categoryQuery = `'${FURNITURE_FOLDER_ID}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false`;
   const categories = await fetchDriveFiles(categoryQuery, "files(id, name)");
   categoriesCache = categories.map((c: any) => c.name);
-  return categoriesCache;
+  return categoriesCache || [];
 }
 
 export async function fetchGalleryImages(): Promise<GalleryImage[]> {

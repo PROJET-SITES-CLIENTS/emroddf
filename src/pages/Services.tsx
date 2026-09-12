@@ -109,7 +109,7 @@ export default function Services() {
 
       {/* ── PAGE HEADER ──────────────────────── */}
       <div className="container mx-auto max-w-7xl px-6 md:px-12 mb-16">
-        <div className="relative pt-24 pb-24 overflow-hidden rounded-[40px] shadow-2xl group">
+        <div className="relative pt-24 pb-20 overflow-hidden group">
           <div className="absolute inset-0">
             <img src="/gallery/IMG-20260531-WA0038.jpg" alt="Catalogue Header" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000 ease-out animate-ken-burns" />
             <div className="absolute inset-0" style={{ background: "linear-gradient(to right, rgba(13,51,32,0.8) 0%, rgba(13,51,32,0.4) 100%)" }} />
@@ -117,17 +117,17 @@ export default function Services() {
 
           <div className="relative z-10 max-w-5xl px-8 md:px-16 text-white">
             <motion.div initial={{ opacity: 0, y: -20, filter: "blur(8px)" }} animate={{ opacity: 1, y: 0, filter: "blur(0px)" }} transition={{ duration: 0.9, ease: [0.76, 0, 0.24, 1] }}>
-              <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/10 backdrop-blur-md border border-white/20 text-[10px] uppercase tracking-[0.3em] font-bold mb-8 rounded-full text-white">
-                <Sparkles className="w-3.5 h-3.5 text-accent" />
-                Collection & Essences
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 border border-white/20 text-[10px] uppercase tracking-[0.3em] font-medium mb-8 text-white/80">
+                <span className="w-1.5 h-1.5 rounded-sm bg-accent" />
+                Collection &amp; Essences
               </div>
 
-              <h1 className="text-5xl md:text-7xl font-light mb-8 font-heading leading-tight text-white drop-shadow-lg">
+              <h1 className="text-4xl md:text-5xl font-light mb-6 font-heading leading-tight text-white">
                 Notre{" "}
                 <span className="text-gradient-animated font-medium">Catalogue</span>
               </h1>
 
-              <p className="text-base md:text-lg text-white/80 leading-relaxed font-light max-w-xl drop-shadow-md">
+              <p className="text-base md:text-lg text-white/80 leading-relaxed font-light max-w-xl">
                 Découvrez nos modèles. Les dimensions, le choix du bois et les finitions
                 sont entièrement personnalisables selon vos envies.
               </p>
@@ -141,19 +141,19 @@ export default function Services() {
         {/* ── FILTERS ──────────────────────────── */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6 border-b border-border pb-8">
           {/* Animated pill filter */}
-          <div className="flex gap-2 relative bg-secondary p-1.5 rounded-full border border-border overflow-x-auto hide-scrollbar max-w-full">
+          <div className="flex gap-2 relative bg-secondary p-1.5 rounded-sm border border-border overflow-x-auto hide-scrollbar max-w-full">
             {categories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setFilter(cat)}
-                className={`relative z-10 px-5 py-2 text-[10px] uppercase tracking-[0.2em] transition-all duration-300 cursor-pointer font-bold rounded-full ${
+                className={`relative z-10 px-5 py-2 text-[10px] uppercase tracking-[0.2em] transition-all duration-300 cursor-pointer font-medium rounded-sm ${
                   filter === cat ? "text-primary-foreground" : "text-secondary-foreground hover:bg-border/40"
                 }`}
               >
                 {filter === cat && (
                   <motion.div
                     layoutId="activeFilterPill"
-                    className="absolute inset-0 rounded-full -z-10 shimmer-sweep"
+                    className="absolute inset-0 rounded-sm -z-10 shimmer-sweep"
                     style={{ background: "linear-gradient(135deg, #11522f, #154c30)" }}
                     transition={{ type: "spring", stiffness: 380, damping: 30 }}
                   />
@@ -170,7 +170,7 @@ export default function Services() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Rechercher un modèle..."
-              className="w-full md:w-72 bg-card border border-border focus:border-accent pl-10 pr-4 py-2.5 text-xs outline-none transition-all duration-300 focus:shadow-lg focus:shadow-accent/5 rounded-full"
+              className="w-full md:w-72 bg-card border border-border focus:border-accent pl-10 pr-4 py-2.5 text-xs outline-none transition-all duration-300 rounded-sm"
             />
             <Search className="absolute left-3.5 top-3 w-4 h-4 text-foreground/40 group-focus-within:text-accent transition-colors" />
           </div>
@@ -196,7 +196,7 @@ export default function Services() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="text-center py-32 bg-red-950/20 border border-red-500/20 rounded-lg"
+            className="text-center py-32 bg-red-950/20 border border-red-500/20 rounded-sm"
           >
             <div className="text-6xl mb-6 opacity-80">⚠️</div>
             <p className="text-red-400 text-lg mb-6 max-w-md mx-auto">{error}</p>
@@ -230,10 +230,10 @@ export default function Services() {
                   <TiltCard className="h-full relative group">
                     <Link
                       to={`/catalogue/${item.categorySlug}/${item.modelSlug}`}
-                      className="group cursor-pointer flex flex-col bg-card border border-border/50 hover:border-accent/40 transition-all duration-500 hover:shadow-2xl hover:shadow-accent/8 h-full relative overflow-hidden"
+                      className="group cursor-pointer flex flex-col bg-card border border-border/50 hover:border-accent/40 transition-all duration-500 h-full relative overflow-hidden"
                     >
                       {/* Image */}
-                      <div className="aspect-square overflow-hidden bg-secondary relative image-shine">
+                      <div className="aspect-square overflow-hidden bg-secondary relative">
                         {item.mainImageId ? (
                           <img
                             src={getImageUrl(item.mainImageId)}
@@ -265,7 +265,7 @@ export default function Services() {
                             initial={{ opacity: 0, scale: 0.5, y: -10 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             transition={{ delay: i * 0.05 + 0.3, type: "spring", stiffness: 400, damping: 15 }}
-                            className="absolute top-3 right-3 px-3 py-1.5 text-xs font-bold text-accent-foreground shadow-lg"
+                            className="absolute top-3 right-3 px-3 py-1.5 text-xs font-medium text-accent-foreground"
                             style={{ background: "linear-gradient(135deg, #e85d04, #b84600)" }}
                           >
                             {item.prix}
@@ -316,9 +316,9 @@ export default function Services() {
           style={{ background: "linear-gradient(135deg, #0d3320 0%, #154c30 60%, #1a5535 100%)" }}
         >
           {/* Animated orbs */}
-          <div className="absolute top-0 right-0 w-40 h-40 rounded-bl-full opacity-15 group-hover:scale-150 transition-transform duration-1000" style={{ background: "#e85d04" }} />
-          <div className="absolute bottom-0 left-0 w-56 h-56 rounded-tr-full opacity-8 group-hover:scale-150 transition-transform duration-1000" style={{ background: "#e85d04" }} />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full opacity-0 group-hover:opacity-5 transition-opacity duration-1000 animate-morph-blob" style={{ background: "radial-gradient(circle, #ffffff, transparent)" }} />
+          <div className="absolute top-0 right-0 w-40 h-40 rounded-sm opacity-10 group-hover:scale-150 transition-transform duration-1000" style={{ background: "#e85d04" }} />
+          <div className="absolute bottom-0 left-0 w-56 h-56 rounded-sm opacity-5 group-hover:scale-150 transition-transform duration-1000" style={{ background: "#e85d04" }} />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 opacity-[0.02] transition-opacity duration-1000 pointer-events-none" style={{ background: "radial-gradient(circle, #ffffff, transparent)" }} />
 
           {/* Gold thin border on hover */}
           <div className="absolute inset-0 border-2 opacity-0 group-hover:opacity-15 transition-opacity duration-500" style={{ borderColor: "#e85d04" }} />
@@ -326,7 +326,7 @@ export default function Services() {
           <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{ backgroundImage: "repeating-linear-gradient(45deg, #ffffff 0px, #ffffff 1px, transparent 0px, transparent 50%)", backgroundSize: "24px 24px" }} />
 
           <div className="relative z-10">
-            <div className="text-xs uppercase tracking-[0.3em] font-bold mb-6" style={{ color: "#e85d04" }}>— Sur-Mesure —</div>
+            <div className="text-xs uppercase tracking-[0.3em] font-medium mb-6" style={{ color: "#e85d04" }}>— Sur-Mesure —</div>
             <h2 className="text-3xl md:text-5xl font-heading mb-6">Un modèle vous intéresse ?</h2>
             <p className="max-w-2xl mx-auto text-primary-foreground/65 mb-10 text-lg leading-relaxed">
               Contactez-nous avec la référence du modèle. Nous pourrons l'adapter à vos mesures ou nous en inspirer pour votre projet.
@@ -334,7 +334,7 @@ export default function Services() {
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Link
                 to="/contact"
-                className="shimmer-sweep inline-flex items-center justify-center gap-3 px-8 py-4 text-accent-foreground uppercase tracking-[0.2em] text-xs font-bold transition-all hover:shadow-xl hover:-translate-y-1 transform group/btn"
+                className="shimmer-sweep inline-flex items-center justify-center gap-3 px-8 py-4 text-accent-foreground uppercase tracking-[0.2em] text-xs font-medium transition-all group/btn"
                 style={{ background: "linear-gradient(135deg, #e85d04, #b84600)" }}
               >
                 Demander un devis estimatif

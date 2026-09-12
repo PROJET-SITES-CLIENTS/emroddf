@@ -87,7 +87,7 @@ export default function LeadPopup() {
             letterSpacing: active ? "0.1em" : "normal",
             textTransform: active ? "uppercase" : "none",
             color: focused ? "#e85d04" : active ? "#e85d0480" : "var(--color-muted-foreground)",
-            fontWeight: active ? 700 : 400,
+            fontWeight: active ? 500 : 400,
           }}
         >
           {label} <span className="text-accent ml-0.5">*</span>
@@ -120,7 +120,7 @@ export default function LeadPopup() {
                <div className="absolute inset-0" style={{ background: "linear-gradient(to right, transparent, rgba(20,20,20,0.8))" }} />
                
                <div className="absolute bottom-8 left-8 text-white">
-                 <div className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center mb-6 backdrop-blur-sm bg-white/5">
+                 <div className="w-12 h-12 rounded-sm border border-white/20 flex items-center justify-center mb-6 backdrop-blur-sm bg-white/5">
                    <Sparkles className="w-5 h-5 text-accent" />
                  </div>
                  <h4 className="font-heading text-3xl mb-2">Excellence<br/>& Sur-mesure</h4>
@@ -131,18 +131,18 @@ export default function LeadPopup() {
             {/* Right side form */}
             <div className="w-full md:w-7/12 p-8 md:p-14 relative bg-card border-t-4 md:border-t-0 md:border-l border-accent z-10 glass-card">
               {/* Decorative blob */}
-              <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full opacity-5 blur-3xl pointer-events-none" style={{ background: "radial-gradient(circle, #e85d04, transparent)" }} />
+              <div className="absolute -top-20 -right-20 w-64 h-64 rounded-sm opacity-5 blur-3xl pointer-events-none" style={{ background: "radial-gradient(circle, #e85d04, transparent)" }} />
 
               <button 
                 onClick={closePopup} 
-                className="absolute top-5 right-5 text-foreground/40 hover:text-accent bg-secondary/50 hover:bg-secondary p-2 rounded-full transition-all duration-300"
+                className="absolute top-5 right-5 text-foreground/40 hover:text-accent bg-secondary/50 hover:bg-secondary p-2 rounded-sm transition-all duration-300"
               >
                 <X className="w-5 h-5" />
               </button>
               
               <div className="mb-10 mt-2">
-                 <div className="inline-flex items-center gap-2 text-accent uppercase tracking-[0.3em] text-[10px] font-bold mb-4 bg-accent/10 px-3 py-1.5 rounded-sm">
-                   <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                 <div className="inline-flex items-center gap-2 text-accent uppercase tracking-[0.3em] text-[10px] font-medium mb-4 bg-accent/10 px-3 py-1.5 rounded-sm">
+                   <span className="w-1.5 h-1.5 rounded-sm bg-accent animate-pulse" />
                    Contact
                  </div>
                  <h3 className="font-heading text-3xl md:text-4xl mb-4 text-primary">
@@ -186,7 +186,7 @@ export default function LeadPopup() {
                       letterSpacing: formData.serviceType ? "0.1em" : "normal",
                       textTransform: formData.serviceType ? "uppercase" : "none",
                       color: formData.serviceType ? "#e85d04" : "var(--color-muted-foreground)",
-                      fontWeight: formData.serviceType ? 700 : 400,
+                      fontWeight: formData.serviceType ? 500 : 400,
                     }}
                   >
                     Quel service vous intéresse ? <span className="text-accent ml-0.5">*</span>
@@ -202,12 +202,12 @@ export default function LeadPopup() {
                     onClick={handleRipple}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="ripple-btn shimmer-sweep w-full flex items-center justify-center gap-3 text-primary-foreground uppercase tracking-[0.2em] text-[10px] py-5 font-bold disabled:opacity-80 transition-all shadow-xl group/btn"
+                    className="ripple-btn shimmer-sweep w-full flex items-center justify-center gap-3 text-primary-foreground uppercase tracking-[0.2em] text-[10px] py-4 font-medium disabled:opacity-80 transition-all group/btn"
                     style={{ background: "linear-gradient(135deg, #154c30, #1a5535)" }}
                   >
                     {isSubmitting ? (
                       <span className="flex items-center gap-2">
-                        <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                        <div className="w-4 h-4 rounded-sm border-2 border-white/30 border-t-white animate-spin" />
                         Patientez s'il vous plaît...
                       </span>
                     ) : (
@@ -236,17 +236,17 @@ export default function LeadPopup() {
              <motion.div 
                initial={{ scale: 0.9, opacity: 0 }}
                animate={{ scale: 1, opacity: 1 }}
-               className="bg-card w-full max-w-md p-12 text-center border-t-4 border-accent shadow-2xl relative overflow-hidden glass-card rounded-sm"
+               className="bg-card w-full max-w-md p-12 text-center border-t-4 border-accent relative overflow-hidden glass-card rounded-sm"
              >
-                <div className="absolute top-0 right-0 w-32 h-32 bg-accent/5 rounded-full blur-2xl" />
+                <div className="absolute top-0 right-0 w-32 h-32 bg-accent/5 rounded-sm blur-2xl" />
                 
                 <motion.div 
                   initial={{ scale: 0, rotate: -180 }}
                   animate={{ scale: 1, rotate: 0 }}
                   transition={{ type: "spring", stiffness: 300, delay: 0.1 }}
-                  className="w-20 h-20 mx-auto border border-accent/20 rounded-full flex items-center justify-center mb-6 bg-accent/5 relative"
+                  className="w-20 h-20 mx-auto border border-accent/20 rounded-sm flex items-center justify-center mb-6 bg-accent/5 relative"
                 >
-                  <div className="absolute inset-0 rounded-full border border-accent animate-ping opacity-20" />
+                  <div className="absolute inset-0 rounded-sm border border-accent animate-ping opacity-20" />
                   <Sparkles className="w-8 h-8 text-accent" />
                 </motion.div>
 

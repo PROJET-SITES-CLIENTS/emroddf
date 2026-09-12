@@ -72,7 +72,18 @@ function saveLead(data) {
   ].join("\n");
 
   folder.createFile(fileName, content, MimeType.PLAIN_TEXT);
-  Logger.log("Lead sauvegardé : " + fileName);
+  
+  // Envoi d'email
+  var email = Session.getEffectiveUser().getEmail();
+  if (email) {
+    MailApp.sendEmail({
+      to: email,
+      subject: "Nouveau Prospect (Lead) - EMROD SARL",
+      body: content
+    });
+  }
+  
+  Logger.log("Lead sauvegardé et email envoyé : " + fileName);
 }
 
 // ── Sauvegarde d'un bon de commande ──────────────────────────────────────────
@@ -109,7 +120,18 @@ function saveOrder(data) {
   ].join("\n");
 
   folder.createFile(fileName, content, MimeType.PLAIN_TEXT);
-  Logger.log("Bon de commande sauvegardé : " + fileName);
+  
+  // Envoi d'email
+  var email = Session.getEffectiveUser().getEmail();
+  if (email) {
+    MailApp.sendEmail({
+      to: email,
+      subject: "Nouveau Bon de Commande - " + ref + " - EMROD SARL",
+      body: content
+    });
+  }
+
+  Logger.log("Bon de commande sauvegardé et email envoyé : " + fileName);
 }
 
 // ── Test manuel (à lancer depuis l'éditeur pour vérifier) ────────────────────
