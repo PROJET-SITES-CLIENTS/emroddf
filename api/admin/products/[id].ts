@@ -1,11 +1,14 @@
 // ══════════════════════════════════════════════════════════════════
-// GET    /api/admin/products/[id] — détail complet + images
+// GET    /api/admin/products/[id] — détail complet + médias
 // PUT    /api/admin/products/[id] — mise à jour des champs
-// DELETE /api/admin/products/[id] — supprime produit + images (Blob inclus)
+//         (incl. depositMode/depositValue : acompte personnalisable)
+// DELETE /api/admin/products/[id] — supprime produit + médias (Blob inclus)
 // ══════════════════════════════════════════════════════════════════
 import { del } from '@vercel/blob';
 import { requireAdmin } from '../../_lib/auth';
 import { db, uniqueSlug } from '../../_lib/db';
+
+const DEPOSIT_MODES = ['percent', 'fixed', 'none'];
 
 export default async function handler(req: any, res: any) {
   if (!requireAdmin(req, res)) return;
@@ -18,13 +21,15 @@ export default async function handler(req: any, res: any) {
 
     if (req.method === 'GET') {
       const [p] = await sql`
-        SELECT p.*, c.name AS category_name
-        FROM products p LEFT JOIN categories c ON c.id = p.category_id
+        SELECT p.*, c.name AS category_name, pc.name AS section_name
+        FROM products p
+        LEFT JOIN categories c ON c.id = p.category_id
+        LEFT JOIN categories pc ON pc.id = c.parent_id
         WHERE p.id = ${id}
       `;
       if (!p) return res.status(404).json({ error: 'Produit introuvable' });
       const images = await sql`
-        SELECT id, url, is_main, position FROM product_images
+        SELECT id, url, media_type, is_main, position FROM product_images
         WHERE product_id = ${id} ORDER BY is_main DESC, position, id
       `;
       return res.status(200).json({ ...p, images });
@@ -46,6 +51,15 @@ export default async function handler(req: any, res: any) {
       const isPublished = body.isPublished !== undefined ? Boolean(body.isPublished) : undefined;
       const position = body.position !== undefined ? Number(body.position) || 0 : undefined;
 
+      // Acompte personnalisable : mode et valeur (% ou GNF) sont
+      // modifiables indépendamment l'un de l'autre
+      const depositMode = body.depositMode !== undefined
+        ? (DEPOSIT_MODES.includes(body.depositMode) ? body.depositMode : 'percent')
+        : undefined;
+      const depositValue = body.depositValue !== undefined
+        ? Math.max(0, Math.round(Number(body.depositValue) || 0))
+        : undefined;
+
       const slug = name !== undefined ? await uniqueSlug('products', name, id) : undefined;
 
       const [row] = await sql`
@@ -59,6 +73,8 @@ export default async function handler(req: any, res: any) {
           essence = COALESCE(${essence ?? null}, essence),
           is_published = COALESCE(${isPublished ?? null}, is_published),
           position = COALESCE(${position ?? null}, position),
+          deposit_mode = COALESCE(${depositMode ?? null}, deposit_mode),
+          deposit_value = COALESCE(${depositValue ?? null}, deposit_value),
           slug = COALESCE(${slug ?? null}, slug),
           updated_at = now()
         WHERE id = ${id}

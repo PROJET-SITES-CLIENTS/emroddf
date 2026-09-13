@@ -9,6 +9,35 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import { neon } from '@neondatabase/serverless';
 
+/** Découpe un script SQL en instructions, en respectant les blocs $$...$$ */
+function splitStatements(sqlText: string): string[] {
+  const out: string[] = [];
+  let current = '';
+  let inDollar = false;
+  let i = 0;
+  while (i < sqlText.length) {
+    if (sqlText.startsWith('$$', i)) {
+      inDollar = !inDollar;
+      current += '$$';
+      i += 2;
+      continue;
+    }
+    const ch = sqlText[i];
+    if (ch === ';' && !inDollar) {
+      out.push(current);
+      current = '';
+    } else {
+      current += ch;
+    }
+    i++;
+  }
+  if (current.trim()) out.push(current);
+  // Retire les commentaires ligne par ligne puis ignore les instructions vides
+  return out
+    .map((s) => s.replace(/--[^\n]*/g, '').trim())
+    .filter((s) => s.length > 0);
+}
+
 async function main() {
   const url = process.env.DATABASE_URL;
   if (!url) {
@@ -23,16 +52,11 @@ async function main() {
   const root = process.cwd();
 
   // 1. Schéma — exécution instruction par instruction (les requêtes
-  //    préparées n'acceptent pas plusieurs commandes à la fois)
+  //    préparées n'acceptent pas plusieurs commandes à la fois).
+  //    Le séparateur respecte les blocs dollar-quoted ($$...$$).
   console.log('📄 Exécution du schéma (db/schema.sql)...');
   const schema = readFileSync(join(root, 'db', 'schema.sql'), 'utf8');
-  const statements = schema
-    .split('\n')
-    .filter((line) => !line.trimStart().startsWith('--'))
-    .join('\n')
-    .split(';')
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0);
+  const statements = splitStatements(schema);
   for (const statement of statements) {
     await sql.query(statement);
   }

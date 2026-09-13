@@ -6,11 +6,15 @@
 // ══════════════════════════════════════════════════════════════════
 
 // ── Types ──────────────────────────────────────────────────────────
+export type DepositMode = 'percent' | 'fixed' | 'none';
+
 export interface Product {
   id: number;
   name: string;
   category: string;
   categorySlug: string;
+  sectionName: string;
+  sectionSlug: string;
   modelSlug: string;
   mainImageUrl: string | null;
   prix: string;
@@ -19,13 +23,19 @@ export interface Product {
   dimensions?: string;
   finition?: string;
   essence?: string;
+  depositMode: DepositMode;
+  depositValue: number;
   imageCount: number;
+  videoCount: number;
 }
 
-export interface Category {
+export interface CategoryInfo {
   id: number;
   name: string;
   slug: string;
+  parentId: number | null;
+  parentName: string | null;
+  parentSlug: string | null;
   productCount: number;
 }
 
@@ -83,6 +93,33 @@ export function slugify(text: string): string {
     .replace(/\-\-+/g, '-');
 }
 
+/** Une vidéo est lue en <video> si l'URL pointe vers un fichier, sinon embed */
+export function isVideoFile(url: string): boolean {
+  return /\.(mp4|webm|mov)(\?|$)/i.test(url) || url.includes('.blob.');
+}
+
+/**
+ * Calcule le montant d'acompte (GNF) affiché au client.
+ * Même logique que api/_lib/deposit.ts (source de vérité côté serveur).
+ * @returns montant en GNF, ou null si paiement en ligne désactivé.
+ */
+export function computeDeposit(
+  priceTotal: number,
+  mode: DepositMode | string,
+  value: number
+): number | null {
+  if (mode === 'none') return null;
+  if (mode === 'fixed') {
+    const amount = Math.round(Number(value) || 0);
+    return amount > 0 ? amount : null;
+  }
+  const percent = Math.min(Math.max(Number(value) || 0, 0), 100);
+  if (percent <= 0) return null;
+  const price = Number(priceTotal) || 0;
+  if (price <= 0) return null;
+  return Math.round((price * percent) / 100);
+}
+
 async function getJson<T>(url: string): Promise<T> {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`API Error ${res.status}: ${url}`);
@@ -90,7 +127,7 @@ async function getJson<T>(url: string): Promise<T> {
 }
 
 // ── Caches mémoire (évitent les re-fetch à la navigation) ─────────
-let catalogueCache: { categories: Category[]; products: Product[] } | null = null;
+let catalogueCache: { categories: CategoryInfo[]; products: Product[] } | null = null;
 let galleryCache: { images: GalleryMedia[]; videos: GalleryMedia[] } | null = null;
 let settingsCache: SiteSettings | null = null;
 
@@ -100,16 +137,16 @@ export async function fetchCatalogue(): Promise<Product[]> {
   return data.products;
 }
 
-async function fetchCatalogueFull(): Promise<{ categories: Category[]; products: Product[] }> {
+export async function fetchCatalogueFull(): Promise<{ categories: CategoryInfo[]; products: Product[] }> {
   if (catalogueCache) return catalogueCache;
-  const data = await getJson<{ categories: Category[]; products: Product[] }>('/api/public/catalogue');
+  const data = await getJson<{ categories: CategoryInfo[]; products: Product[] }>('/api/public/catalogue');
   catalogueCache = data;
   return data;
 }
 
-export async function fetchCategoriesList(): Promise<string[]> {
+export async function fetchCategories(): Promise<CategoryInfo[]> {
   const data = await fetchCatalogueFull();
-  return data.categories.map((c) => c.name);
+  return data.categories;
 }
 
 export async function fetchProductDetail(categorySlug: string, modelSlug: string) {
@@ -125,7 +162,9 @@ export async function fetchProductDetail(categorySlug: string, modelSlug: string
     dimensions: string;
     finition: string;
     essence: string;
-    images: { id: number; url: string }[];
+    depositMode: DepositMode;
+    depositValue: number;
+    images: { id: number; url: string; mediaType: 'image' | 'video' }[];
   }>(`/api/public/product/${encodeURIComponent(categorySlug)}/${encodeURIComponent(modelSlug)}`);
   return data;
 }
@@ -187,4 +226,23 @@ export async function submitLead(data: {
     throw new Error(err.error || "Erreur d'envoi de la demande");
   }
   return res.json();
+}
+
+// ── Commande SANS acompte en ligne (produits avec paiement désactivé) ─
+export async function submitNoDepositOrder(data: {
+  productId: number;
+  nom: string;
+  prenom: string;
+  telephone: string;
+  adresse: string;
+  website?: string;
+}): Promise<{ success: boolean; reference: string }> {
+  const res = await fetch('/api/public/orders', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  const body = await res.json().catch(() => ({ error: 'Erreur réseau' }));
+  if (!res.ok) throw new Error(body.error || "Erreur d'enregistrement de la commande");
+  return body;
 }

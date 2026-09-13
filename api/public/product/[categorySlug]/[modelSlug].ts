@@ -1,6 +1,6 @@
 // ══════════════════════════════════════════════════════════════════
 // GET /api/public/product/[categorySlug]/[modelSlug]
-// Détail d'un produit publié + toutes ses images.
+// Détail d'un produit publié : images + vidéos + règle d'acompte.
 // ══════════════════════════════════════════════════════════════════
 import { db } from '../../../_lib/db';
 
@@ -19,7 +19,7 @@ export default async function handler(req: any, res: any) {
 
     const rows = await sql`
       SELECT p.id, p.name, p.slug, p.description, p.price, p.dimensions,
-             p.finition, p.essence,
+             p.finition, p.essence, p.deposit_mode, p.deposit_value,
              c.name AS category, c.slug AS category_slug
       FROM products p
       LEFT JOIN categories c ON c.id = p.category_id
@@ -34,8 +34,9 @@ export default async function handler(req: any, res: any) {
     }
     const p = rows[0];
 
-    const images = await sql`
-      SELECT id, url FROM product_images
+    // Médias ordonnés : image principale d'abord, puis position
+    const media = await sql`
+      SELECT id, url, media_type FROM product_images
       WHERE product_id = ${p.id}
       ORDER BY is_main DESC, position, id
     `;
@@ -52,7 +53,9 @@ export default async function handler(req: any, res: any) {
       dimensions: p.dimensions || '',
       finition: p.finition || '',
       essence: p.essence || '',
-      images: images.map((i: any) => ({ id: i.id, url: i.url })),
+      depositMode: p.deposit_mode,
+      depositValue: Number(p.deposit_value),
+      images: media.map((m: any) => ({ id: m.id, url: m.url, mediaType: m.media_type })),
     });
   } catch (err: any) {
     console.error('product error:', err);

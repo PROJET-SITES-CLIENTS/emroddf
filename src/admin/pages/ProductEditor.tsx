@@ -4,12 +4,23 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
-  ArrowLeft, Save, Loader2, Upload, Trash2, Star, ChevronLeft, ChevronRight, Plus,
+  ArrowLeft, Save, Loader2, Upload, Trash2, Star, ChevronLeft, ChevronRight, Plus, Film,
 } from 'lucide-react';
-import { api } from '../../lib/adminApi';
+import { api, formatGNF } from '../../lib/adminApi';
 
-interface Cat { id: number; name: string }
-interface Img { id: number; url: string; is_main: boolean; position: number }
+interface Cat { id: number; name: string; parent_id: number | null }
+interface Img { id: number; url: string; media_type: 'image' | 'video'; is_main: boolean; position: number }
+
+function isVideoFileUrl(url: string): boolean {
+  return /\.(mp4|webm|mov)(\?|$)/i.test(url) || url.includes('.blob.');
+}
+
+function previewDeposit(mode: string, value: number, price: number): string {
+  if (mode === 'none') return 'Paiement en ligne désactivé — commande directe';
+  if (mode === 'fixed') return `Acompte fixe : ${formatGNF(value)}`;
+  if (!price) return 'Définissez un prix pour calculer l\'acompte';
+  return `Acompte (${value}%) : ${formatGNF(Math.round(price * value / 100))}`;
+}
 
 export default function ProductEditor() {
   const { id } = useParams<{ id: string }>();
@@ -28,6 +39,7 @@ export default function ProductEditor() {
   const [form, setForm] = useState({
     name: '', categoryId: '', price: '', description: '',
     dimensions: '', finition: '', essence: '', isPublished: true,
+    depositMode: 'percent', depositValue: '60',
   });
   const [images, setImages] = useState<Img[]>([]);
 
@@ -46,6 +58,8 @@ export default function ProductEditor() {
             finition: p.finition || '',
             essence: p.essence || '',
             isPublished: p.is_published,
+            depositMode: p.deposit_mode || 'percent',
+            depositValue: String(p.deposit_value ?? 60),
           });
           setImages(p.images || []);
         })
@@ -70,6 +84,8 @@ export default function ProductEditor() {
         finition: form.finition,
         essence: form.essence,
         isPublished: form.isPublished,
+        depositMode: form.depositMode,
+        depositValue: Number(form.depositValue.replace(/[^\d]/g, '')) || 0,
       };
       if (isNew) {
         const created = await api.post<{ id: number }>('/api/admin/products', payload);
@@ -100,8 +116,9 @@ export default function ProductEditor() {
     setError('');
     try {
       for (const file of Array.from(files)) {
-        const url = await api.uploadFile(file, 'produits');
-        await api.post(`/api/admin/products/${productId}/images`, { url });
+        const mediaType = file.type.startsWith('video/') ? 'video' : 'image';
+        const url = await api.uploadFile(file, mediaType === 'video' ? 'produits/videos' : 'produits');
+        await api.post(`/api/admin/products/${productId}/images`, { url, mediaType });
       }
       await refreshImages();
     } catch (e: any) {
@@ -194,7 +211,23 @@ export default function ProductEditor() {
               <label className={labelCls}>Catégorie</label>
               <select value={form.categoryId} onChange={(e) => setForm({ ...form, categoryId: e.target.value })} className={inputCls}>
                 <option value="">— Sans catégorie —</option>
-                {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                {(() => {
+                  const sections = categories.filter((c) => c.parent_id === null);
+                  const childrenOf = (id: number) => categories.filter((c) => c.parent_id === id);
+                  const free = sections.filter((s) => childrenOf(s.id).length === 0);
+                  const withSubs = sections.filter((s) => childrenOf(s.id).length > 0);
+                  return (
+                    <>
+                      {free.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                      {withSubs.map((s) => (
+                        <optgroup key={s.id} label={s.name}>
+                          <option value={s.id}>{s.name} (général)</option>
+                          {childrenOf(s.id).map((sub) => <option key={sub.id} value={sub.id}>↳ {sub.name}</option>)}
+                        </optgroup>
+                      ))}
+                    </>
+                  );
+                })()}
               </select>
             </div>
             <div>
@@ -203,9 +236,45 @@ export default function ProductEditor() {
                 onChange={(e) => setForm({ ...form, price: e.target.value.replace(/[^\d]/g, '') })}
                 placeholder="Ex : 1500000 (0 = sur devis)" className={inputCls} />
               <p className="text-[11px] text-neutral-400 mt-1">
-                Acompte calculé automatiquement : <strong>{Math.round((Number(form.price) || 0) * 0.6).toLocaleString('fr-FR')} GNF</strong>
+                0 = « Prix sur demande » (paiement en ligne bloqué)
               </p>
             </div>
+          </div>
+
+          {/* Acompte — règle propre à ce produit */}
+          <div className="border border-neutral-200 rounded-sm p-4 bg-neutral-50/50 space-y-3">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-700">Acompte à la commande</label>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { mode: 'percent', label: 'Pourcentage', hint: 'du prix' },
+                { mode: 'fixed', label: 'Montant fixe', hint: 'en GNF' },
+                { mode: 'none', label: 'Désactivé', hint: 'sans paiement' },
+              ].map((opt) => (
+                <button key={opt.mode} type="button"
+                  onClick={() => setForm({ ...form, depositMode: opt.mode, depositValue: opt.mode === 'percent' && !form.depositValue ? '60' : form.depositValue })}
+                  className={`p-3 rounded-sm border text-center transition ${form.depositMode === opt.mode ? 'border-[#e85d04] bg-[#e85d04]/5' : 'border-neutral-200 bg-white hover:border-[#e85d04]/40'}`}>
+                  <div className={`text-xs font-semibold ${form.depositMode === opt.mode ? 'text-[#e85d04]' : 'text-neutral-700'}`}>{opt.label}</div>
+                  <div className="text-[10px] text-neutral-400">{opt.hint}</div>
+                </button>
+              ))}
+            </div>
+            {form.depositMode !== 'none' && (
+              <div className="flex items-center gap-3">
+                <input type="text" value={form.depositValue}
+                  onChange={(e) => setForm({ ...form, depositValue: e.target.value.replace(/[^\d]/g, '') })}
+                  className={`${inputCls} max-w-[140px]`}
+                  placeholder={form.depositMode === 'percent' ? '60' : '500000'} />
+                <span className="text-sm text-neutral-500 font-medium">{form.depositMode === 'percent' ? '%' : 'GNF'}</span>
+                <span className="text-xs text-neutral-400 ml-auto text-right">
+                  {previewDeposit(form.depositMode, Number(form.depositValue) || 0, Number(form.price.replace(/[^\d]/g, '')) || 0)}
+                </span>
+              </div>
+            )}
+            {form.depositMode === 'none' && (
+              <p className="text-[11px] text-neutral-500">
+                Le client commandera sans paiement en ligne : sa commande sera enregistrée et il confirmera sur WhatsApp.
+              </p>
+            )}
           </div>
 
           <div>
@@ -250,7 +319,9 @@ export default function ProductEditor() {
         {/* ── Colonne droite : images ───────────────────────────── */}
         <div className="bg-white border border-neutral-200 rounded-sm p-6">
           <div className="flex items-center justify-between border-b border-neutral-100 pb-3 mb-5">
-            <h2 className="font-semibold text-neutral-800 text-sm uppercase tracking-wider">Images ({images.length})</h2>
+            <h2 className="font-semibold text-neutral-800 text-sm uppercase tracking-wider">
+              Médias ({images.filter((i) => i.media_type === 'image').length} image(s) · {images.filter((i) => i.media_type === 'video').length} vidéo(s))
+            </h2>
             {productId && (
               <button
                 onClick={() => fileInput.current?.click()}
@@ -259,19 +330,19 @@ export default function ProductEditor() {
                 style={{ background: 'linear-gradient(135deg, #e85d04, #b84600)' }}
               >
                 {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
-                {uploading ? 'Upload en cours...' : 'Ajouter des images'}
+                {uploading ? 'Upload en cours...' : 'Ajouter des médias'}
               </button>
             )}
           </div>
 
-          <input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple className="hidden"
+          <input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime" multiple className="hidden"
             onChange={(e) => handleFiles(e.target.files)} />
 
           {!productId && (
             <div className="border-2 border-dashed border-neutral-200 rounded-sm py-12 text-center">
               <Plus className="w-8 h-8 mx-auto text-neutral-300 mb-3" />
               <p className="text-sm text-neutral-400">
-                Créez d'abord le produit pour pouvoir ajouter des images.
+                Créez d'abord le produit pour pouvoir ajouter des médias.
               </p>
             </div>
           )}
@@ -280,19 +351,33 @@ export default function ProductEditor() {
             <div className="border-2 border-dashed border-neutral-200 rounded-sm py-12 text-center cursor-pointer hover:border-[#e85d04]/50 transition"
                  onClick={() => fileInput.current?.click()}>
               <Upload className="w-8 h-8 mx-auto text-neutral-300 mb-3" />
-              <p className="text-sm text-neutral-400">Cliquez pour choisir des images<br />(JPG, PNG, WebP — plusieurs fichiers possibles)</p>
+              <p className="text-sm text-neutral-400">Cliquez pour choisir des images ou vidéos<br />(JPG, PNG, WebP, MP4 — plusieurs fichiers possibles)</p>
             </div>
           )}
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {images.map((img, i) => (
               <div key={img.id} className={`relative group rounded-sm overflow-hidden border-2 ${img.is_main ? 'border-[#e85d04]' : 'border-neutral-200'}`}>
-                <img src={img.url} alt="" className="w-full aspect-square object-cover" />
+                {img.media_type === 'video' ? (
+                  isVideoFileUrl(img.url) ? (
+                    <video src={img.url} muted playsInline preload="metadata" className="w-full aspect-square object-cover" />
+                  ) : (
+                    <div className="w-full aspect-square flex flex-col items-center justify-center gap-2 bg-secondary/60 text-neutral-500">
+                      <Film className="w-8 h-8" />
+                      <span className="text-[9px] px-2 text-center break-all">Vidéo externe</span>
+                    </div>
+                  )
+                ) : (
+                  <img src={img.url} alt="" className="w-full aspect-square object-cover" />
+                )}
                 {img.is_main && (
                   <span className="absolute top-2 left-2 text-[9px] font-bold uppercase tracking-wider text-white px-2 py-1 rounded-sm"
                         style={{ background: '#e85d04' }}>
                     Principale
                   </span>
+                )}
+                {img.media_type === 'video' && (
+                  <span className="absolute top-2 right-2 text-[9px] font-bold uppercase bg-black/70 text-white px-1.5 py-1 rounded-sm">VID</span>
                 )}
                 {/* Actions au survol */}
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-1.5">
@@ -300,9 +385,9 @@ export default function ProductEditor() {
                     className="p-2 bg-white/90 rounded-sm text-neutral-700 hover:text-[#e85d04] disabled:opacity-30" title="Déplacer à gauche">
                     <ChevronLeft className="w-4 h-4" />
                   </button>
-                  {!img.is_main && (
+                  {img.media_type === 'image' && !img.is_main && (
                     <button onClick={() => setMain(img.id)}
-                      className="p-2 bg-white/90 rounded-sm text-neutral-700 hover:text-[#e85d04]" title="Définir comme principale">
+                      className="p-2 bg-white/90 rounded-sm text-neutral-700 hover:text-[#e85d04]" title="Définir comme image principale">
                       <Star className="w-4 h-4" />
                     </button>
                   )}
@@ -321,7 +406,7 @@ export default function ProductEditor() {
 
           {images.length > 0 && (
             <p className="text-[11px] text-neutral-400 mt-4">
-              L'image « Principale » apparaît dans la grille du catalogue. La première image devient principale par défaut.
+              L'image « Principale » apparaît dans la grille du catalogue (la première image ajoutée la devient par défaut — jamais une vidéo). Les vidéos sont lisibles en plein écran sur la fiche du produit.
             </p>
           )}
         </div>

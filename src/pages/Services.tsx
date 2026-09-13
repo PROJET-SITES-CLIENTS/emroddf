@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Loader2, Search, ArrowRight, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
-import { fetchCatalogue, fetchCategoriesList, type Product } from "../lib/api";
+import { fetchCatalogue, fetchCategories, type Product, type CategoryInfo } from "../lib/api";
 
 import heroBg2 from "../assets/images/hero-bg-2.jpg";
 
@@ -78,12 +78,12 @@ export default function Services() {
   const [items, setItems] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState("Tous");
-  const [allCategories, setAllCategories] = useState<string[]>([]);
+  const [filter, setFilter] = useState("all");
+  const [allCategories, setAllCategories] = useState<CategoryInfo[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    Promise.all([fetchCatalogue(), fetchCategoriesList()])
+    Promise.all([fetchCatalogue(), fetchCategories()])
       .then(([productsData, categoriesData]) => {
         setItems(productsData);
         setAllCategories(categoriesData);
@@ -95,12 +95,20 @@ export default function Services() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Use all categories from Drive folders
-  const categories = ["Tous", ...allCategories];
+  // Hiérarchie : sections (niveau 1) et sous-sections (niveau 2)
+  const sections = allCategories.filter((c) => c.parentId === null);
+  const childrenOf = (sectionId: number) => allCategories.filter((c) => c.parentId === sectionId);
+  const activeSection = sections.find((s) => s.slug === filter) || null;
+  const activeSub = allCategories.find((c) => c.slug === filter && c.parentId !== null) || null;
+  const parentOfActiveSub = activeSub ? sections.find((s) => s.id === activeSub.parentId) : null;
 
   const filteredItems = items.filter((item) => {
     if (searchTerm && !item.name.toLowerCase().includes(searchTerm.toLowerCase()) && !item.description.toLowerCase().includes(searchTerm.toLowerCase())) return false;
-    if (filter === "Tous") return true;
+    if (filter === "all") return true;
+    // Sélection d'une section → toute la section (sous-sections incluses)
+    if (activeSection) return item.sectionSlug === activeSection.slug;
+    // Sélection d'une sous-section → uniquement ses produits
+    if (activeSub) return item.categorySlug === activeSub.slug;
     return item.category === filter;
   });
 
@@ -139,18 +147,17 @@ export default function Services() {
       <div className="container mx-auto max-w-7xl px-6 md:px-12">
 
         {/* ── FILTERS ──────────────────────────── */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6 border-b border-border pb-8">
-          {/* Animated pill filter */}
-          <div className="flex gap-2 relative bg-secondary p-1.5 rounded-sm border border-border overflow-x-auto hide-scrollbar max-w-full">
-            {categories.map((cat) => (
+        <div className="mb-12 border-b border-border pb-8 space-y-3">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            {/* Sections (niveau 1) */}
+            <div className="flex gap-2 relative bg-secondary p-1.5 rounded-sm border border-border overflow-x-auto hide-scrollbar max-w-full">
               <button
-                key={cat}
-                onClick={() => setFilter(cat)}
+                onClick={() => setFilter("all")}
                 className={`relative z-10 px-5 py-2 text-[10px] uppercase tracking-[0.2em] transition-all duration-300 cursor-pointer font-medium rounded-sm ${
-                  filter === cat ? "text-primary-foreground" : "text-secondary-foreground hover:bg-border/40"
+                  filter === "all" ? "text-primary-foreground" : "text-secondary-foreground hover:bg-border/40"
                 }`}
               >
-                {filter === cat && (
+                {filter === "all" && (
                   <motion.div
                     layoutId="activeFilterPill"
                     className="absolute inset-0 rounded-sm -z-10 shimmer-sweep"
@@ -158,22 +165,75 @@ export default function Services() {
                     transition={{ type: "spring", stiffness: 380, damping: 30 }}
                   />
                 )}
-                {cat}
+                Tous
               </button>
-            ))}
+              {sections.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => setFilter(cat.slug)}
+                  className={`relative z-10 px-5 py-2 text-[10px] uppercase tracking-[0.2em] transition-all duration-300 cursor-pointer font-medium rounded-sm whitespace-nowrap ${
+                    filter === cat.slug ? "text-primary-foreground" : "text-secondary-foreground hover:bg-border/40"
+                  }`}
+                >
+                  {filter === cat.slug && (
+                    <motion.div
+                      layoutId="activeFilterPill"
+                      className="absolute inset-0 rounded-sm -z-10 shimmer-sweep"
+                      style={{ background: "linear-gradient(135deg, #11522f, #154c30)" }}
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    />
+                  )}
+                  {cat.name}
+                </button>
+              ))}
+            </div>
+
+            {/* Search — Enhanced */}
+            <div className="relative w-full md:w-auto group">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Rechercher un modèle..."
+                className="w-full md:w-72 bg-card border border-border focus:border-accent pl-10 pr-4 py-2.5 text-xs outline-none transition-all duration-300 rounded-sm"
+              />
+              <Search className="absolute left-3.5 top-3 w-4 h-4 text-foreground/40 group-focus-within:text-accent transition-colors" />
+            </div>
           </div>
 
-          {/* Search — Enhanced */}
-          <div className="relative w-full md:w-auto group">
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Rechercher un modèle..."
-              className="w-full md:w-72 bg-card border border-border focus:border-accent pl-10 pr-4 py-2.5 text-xs outline-none transition-all duration-300 rounded-sm"
-            />
-            <Search className="absolute left-3.5 top-3 w-4 h-4 text-foreground/40 group-focus-within:text-accent transition-colors" />
-          </div>
+          {/* Sous-sections (niveau 2) — affichées quand une section est active */}
+          {(activeSection || parentOfActiveSub) && (() => {
+            const section = activeSection || parentOfActiveSub!;
+            const children = childrenOf(section.id);
+            if (children.length === 0) return null;
+            return (
+              <div className="flex gap-2 flex-wrap pl-1">
+                <button
+                  onClick={() => setFilter(section.slug)}
+                  className={`px-4 py-1.5 text-[10px] uppercase tracking-[0.15em] rounded-sm border transition-all cursor-pointer ${
+                    filter === section.slug
+                      ? "bg-accent text-white border-accent"
+                      : "border-border text-foreground/60 hover:border-accent/50 hover:text-accent"
+                  }`}
+                >
+                  Toute la section
+                </button>
+                {children.map((sub) => (
+                  <button
+                    key={sub.id}
+                    onClick={() => setFilter(sub.slug)}
+                    className={`px-4 py-1.5 text-[10px] uppercase tracking-[0.15em] rounded-sm border transition-all cursor-pointer ${
+                      filter === sub.slug
+                        ? "bg-accent text-white border-accent"
+                        : "border-border text-foreground/60 hover:border-accent/50 hover:text-accent"
+                    }`}
+                  >
+                    ↳ {sub.name}
+                  </button>
+                ))}
+              </div>
+            );
+          })()}
         </div>
 
         {/* Count indicator */}
@@ -289,7 +349,8 @@ export default function Services() {
 
                         <div className="border-t border-border/50 pt-4 mt-auto flex justify-between items-center">
                           <span className="text-xs uppercase tracking-widest text-foreground/25">
-                            {item.imageCount} image{item.imageCount > 1 ? "s" : ""}
+                            {item.imageCount} photo{item.imageCount > 1 ? "s" : ""}
+                            {item.videoCount > 0 ? ` · ${item.videoCount} vidé${item.videoCount > 1 ? "os" : "o"}` : ""}
                           </span>
                           <span className="text-xs font-bold text-accent flex items-center gap-1">
                             {item.prix ? item.prix : "Sur demande"}

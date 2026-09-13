@@ -21,13 +21,14 @@ export default async function handler(req: any, res: any) {
     `;
     if (!row) return res.status(404).json({ error: 'Image introuvable' });
 
-    // Si l'image supprimée était la principale → promouvoir la suivante
+    // Si l'image supprimée était la principale → promouvoir l'image suivante
+    // (une vidéo ne peut jamais devenir image principale)
     if (row.is_main) {
       await sql`
         UPDATE product_images SET is_main = true
         WHERE id = (
           SELECT id FROM product_images
-          WHERE product_id = ${row.product_id}
+          WHERE product_id = ${row.product_id} AND media_type = 'image'
           ORDER BY position, id LIMIT 1
         )
       `;

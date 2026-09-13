@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, ShoppingBag, MessageCircle, CheckCircle, Loader2, Sparkles } from "lucide-react";
+import { computeDeposit, submitNoDepositOrder, type DepositMode } from "../lib/api";
 
 interface OrderModalProps {
   isOpen: boolean;
@@ -9,6 +10,8 @@ interface OrderModalProps {
   produit: string;
   prix: string;
   prixNumeric: number;
+  depositMode?: DepositMode;
+  depositValue?: number;
 }
 
 const WHATSAPP_NUMBER = "224623885959"; // Numéro WhatsApp EMROD SARL
@@ -56,6 +59,8 @@ export default function OrderModal({
   produit,
   prix,
   prixNumeric,
+  depositMode = 'percent',
+  depositValue = 60,
 }: OrderModalProps) {
   const [step, setStep] = useState<"form" | "success">("form");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -67,8 +72,10 @@ export default function OrderModal({
   });
   const btnRef = useRef<HTMLButtonElement>(null);
 
-  const acompteNumeric = prixNumeric ? Math.round(prixNumeric * 0.6) : 0;
-  const acompte = prixNumeric ? formatPrice(acompteNumeric) : "À calculer";
+  // Acompte selon la règle du produit (définie dans le tableau de bord)
+  const depositAmount = computeDeposit(prixNumeric, depositMode, depositValue);
+  const paymentEnabled = depositMode !== 'none' && depositAmount !== null && depositAmount > 0;
+  const acompte = paymentEnabled && depositAmount ? formatPrice(depositAmount) : null;
 
   const handleClose = () => {
     onClose();
@@ -93,45 +100,64 @@ export default function OrderModal({
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      // Préparation du message WhatsApp pour la page de succès
-      const waMessage = `Bonjour EMROD SARL ! 🪑\n\nJe viens de payer mon acompte sur votre site via Djomy.\n\n📋 *MA COMMANDE*\nProduit : ${produit}\nPrix total : ${prix}\nAcompte payé : ${acompte}\n\n👤 *MES COORDONNÉES*\nNom & Prénom : ${formData.nom} ${formData.prenom}\nTéléphone : ${formData.telephone}\nAdresse de livraison : ${formData.adresse}\n\nJe confirme ma commande ! 🙏`;
-      localStorage.setItem("emrod_last_order_wa", waMessage);
+      if (paymentEnabled && acompte) {
+        // ── Flux AVEC acompte en ligne (Djomy) ──────────────────────
+        // Message WhatsApp préparé pour la page de succès
+        const waMessage = `Bonjour EMROD SARL ! 🪑\n\nJe viens de payer mon acompte sur votre site via Djomy.\n\n📋 *MA COMMANDE*\nProduit : ${produit}\nPrix total : ${prix}\nAcompte payé : ${acompte}\n\n👤 *MES COORDONNÉES*\nNom & Prénom : ${formData.nom} ${formData.prenom}\nTéléphone : ${formData.telephone}\nAdresse de livraison : ${formData.adresse}\n\nJe confirme ma commande ! 🙏`;
+        localStorage.setItem("emrod_last_order_wa", waMessage);
 
-      // Appel de notre API Serverless pour initier le paiement Djomy.
-      // 🔒 Seul le productId est envoyé : le serveur lit le prix
-      // authentique en base de données.
-      const res = await fetch("/api/payment/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        // 🔒 Seul le productId est envoyé : le serveur lit le prix
+        // authentique et l'acompte en base de données.
+        const res = await fetch("/api/payment/create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            productId,
+            payerNumber: formData.telephone.replace(/[^0-9]/g, ''),
+            nom: formData.nom,
+            prenom: formData.prenom,
+            telephone: formData.telephone,
+            adresse: formData.adresse,
+          })
+        });
+
+        const data = await res.json();
+
+        if (data.success && data.redirectUrl) {
+          setStep("success");
+          setTimeout(() => {
+            // Redirection vers le portail de paiement Djomy
+            window.location.href = data.redirectUrl;
+          }, 1500);
+        } else {
+          console.error("Détails complets de l'erreur API Djomy :", data);
+          let errorMsg = data.error || "Erreur lors de l'initialisation du paiement";
+          if (data.details) {
+              errorMsg += `\n\nDétails techniques : ${data.details}`;
+          }
+          throw new Error(errorMsg);
+        }
+      } else {
+        // ── Flux SANS acompte en ligne ──────────────────────────────
+        // La commande est enregistrée en base, puis le client confirme
+        // directement sur WhatsApp (aucun paiement demandé)
+        await submitNoDepositOrder({
           productId,
-          payerNumber: formData.telephone.replace(/[^0-9]/g, ''),
           nom: formData.nom,
           prenom: formData.prenom,
           telephone: formData.telephone,
           adresse: formData.adresse,
-        })
-      });
+        });
 
-      const data = await res.json();
-
-      if (data.success && data.redirectUrl) {
+        const waMessage = `Bonjour EMROD SARL ! 🪑\n\nJe viens de passer commande sur votre site.\n\n📋 *MA COMMANDE*\nProduit : ${produit}\nPrix total : ${prix}\n\n👤 *MES COORDONNÉES*\nNom & Prénom : ${formData.nom} ${formData.prenom}\nTéléphone : ${formData.telephone}\nAdresse de livraison : ${formData.adresse}\n\nJe souhaite finaliser ma commande ! 🙏`;
         setStep("success");
         setTimeout(() => {
-          // Redirection vers le portail de paiement Djomy
-          window.location.href = data.redirectUrl;
-        }, 1500);
-      } else {
-        console.error("Détails complets de l'erreur API Djomy :", data);
-        let errorMsg = data.error || "Erreur lors de l'initialisation du paiement";
-        if (data.details) {
-            errorMsg += `\n\nDétails techniques : ${data.details}`;
-        }
-        throw new Error(errorMsg);
+          window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(waMessage)}`, "_blank");
+        }, 1200);
       }
     } catch (err: any) {
       console.error("Erreur interceptée par le catch :", err);
-      alert(err.message || "Une erreur est survenue avec le système de paiement. Veuillez réessayer.");
+      alert(err.message || "Une erreur est survenue avec le système de commande. Veuillez réessayer.");
     } finally {
       setIsSubmitting(false);
     }
@@ -188,7 +214,9 @@ export default function OrderModal({
                       Confirmer ma commande
                     </h2>
                     <p className="text-sm text-foreground/60 leading-relaxed">
-                      Remplissez vos informations. Vous serez redirigé(e) vers la page de paiement sécurisée Djomy pour régler l'acompte.
+                      {paymentEnabled
+                        ? "Remplissez vos informations. Vous serez redirigé(e) vers la page de paiement sécurisée Djomy pour régler l'acompte."
+                        : "Remplissez vos informations pour transmettre votre commande à l'atelier (aucun paiement en ligne pour ce modèle)."}
                     </p>
                   </div>
 
@@ -206,12 +234,22 @@ export default function OrderModal({
                         <span className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Prix total</span>
                         <span className="font-semibold text-foreground text-sm">{prix}</span>
                       </div>
-                      <div className="flex justify-between items-center border-t border-border/60 pt-3 mt-1">
-                        <span className="text-[10px] uppercase tracking-[0.2em] text-accent font-bold flex items-center gap-1.5">
-                          Acompte à payer <span className="bg-accent/20 px-1.5 py-0.5 rounded-sm text-[#e85d04]">60%</span>
-                        </span>
-                        <span className="text-lg font-bold text-accent">{acompte}</span>
-                      </div>
+                      {paymentEnabled && acompte ? (
+                        <div className="flex justify-between items-center border-t border-border/60 pt-3 mt-1">
+                          <span className="text-[10px] uppercase tracking-[0.2em] text-accent font-bold flex items-center gap-1.5">
+                            Acompte à payer
+                            {depositMode === 'percent' && (
+                              <span className="bg-accent/20 px-1.5 py-0.5 rounded-sm text-[#e85d04]">{depositValue}%</span>
+                            )}
+                          </span>
+                          <span className="text-lg font-bold text-accent">{acompte}</span>
+                        </div>
+                      ) : (
+                        <div className="flex justify-between items-center border-t border-border/60 pt-3 mt-1">
+                          <span className="text-[10px] uppercase tracking-[0.2em] text-foreground/50 font-bold">Acompte en ligne</span>
+                          <span className="text-sm font-semibold text-foreground/60">Non requis</span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -254,7 +292,9 @@ export default function OrderModal({
                     <div className="flex items-start gap-3 bg-accent/5 border border-accent/20 p-3 mt-2 rounded-sm">
                       <MessageCircle className="w-4 h-4 text-accent flex-shrink-0 mt-0.5" />
                       <span className="text-[11px] text-foreground/70 leading-relaxed font-medium">
-                        Vous serez redirigé(e) vers la page de paiement sécurisée pour régler l'acompte de <strong className="text-accent">{acompte}</strong>. Un message WhatsApp sera ensuite généré.
+                        {paymentEnabled && acompte
+                          ? <>Vous serez redirigé(e) vers la page de paiement sécurisée pour régler l'acompte de <strong className="text-accent">{acompte}</strong>. Un message WhatsApp sera ensuite généré.</>
+                          : <>Aucun acompte n'est demandé en ligne pour ce modèle. Votre commande sera transmise à l'atelier et vous serez redirigé(e) vers WhatsApp pour la finaliser.</>}
                       </span>
                     </div>
 
@@ -302,19 +342,21 @@ export default function OrderModal({
                   </motion.div>
                   <div>
                     <h3 className="font-heading text-3xl text-primary mb-3">
-                      Commande préparée
+                      Commande enregistrée
                     </h3>
                     <p className="text-foreground/60 leading-relaxed text-sm">
-                      Redirection vers le paiement sécurisé Djomy.
+                      {paymentEnabled
+                        ? <>Redirection vers le paiement sécurisé Djomy.</>
+                        : <>Votre commande a été transmise à l'atelier.</>}
                       <br /><br />
                       <span className="text-accent font-medium px-3 py-1.5 bg-accent/10 rounded-sm text-xs uppercase tracking-widest">
-                        Paiement de l'acompte
+                        {paymentEnabled ? "Paiement de l'acompte" : "Confirmation WhatsApp"}
                       </span>
                     </p>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-foreground/40 mt-2 font-medium">
                     <ShoppingBag className="w-4 h-4" />
-                    Redirection en cours <span className="animate-pulse">...</span>
+                    {paymentEnabled ? "Redirection en cours" : "Ouverture de WhatsApp"} <span className="animate-pulse">...</span>
                   </div>
                 </motion.div>
               )}

@@ -21,26 +21,41 @@ commandes reçues.
 ──────────────────────────────────────────────────────────────────────
  2. CATALOGUE (page « Modèles & Services » du site)
 ──────────────────────────────────────────────────────────────────────
-GÉRER LES CATÉGORIES :
- • Bouton « Catégorie » → créer une nouvelle catégorie.
- • Crayon → renommer. Flèches ↑↓ → changer l'ordre d'affichage.
- • Supprimer une catégorie ne supprime pas ses produits (ils
-   deviennent « sans catégorie »).
+SECTIONS ET SOUS-SECTIONS :
+ • « Section / Catégorie » → créez une SECTION (ex : « Chambres »)
+   ou une SOUS-SECTION en choisissant son rattachement
+   (ex : « Lits » à l'intérieur de « Chambres »).
+ • Sur le site : les sections s'affichent en onglets ; sélectionner
+   une section révèle ses sous-sections (filtres « ↳ »).
+ • 2 niveaux maximum. Supprimer une section promeut ses
+   sous-sections au premier niveau (rien n'est perdu).
 
 CRÉER / MODIFIER UN PRODUIT :
- • « Nouveau produit » → nom, catégorie, prix (en GNF), description,
-   dimensions, finition, essence.
+ • « Nouveau produit » → nom, catégorie (section ou sous-section),
+   prix (en GNF), description, dimensions, finition, essence.
  • Prix = 0 → le produit s'affiche « Prix sur demande » et le
    paiement en ligne est désactivé pour ce produit.
- • L'acompte de 60 % est TOUJOURS calculé automatiquement :
-   ne l'ajoutez pas dans le prix.
  • Bouton œil → masquer/afficher un produit sur le site sans le
    supprimer.
 
-GÉRER LES IMAGES D'UN PRODUIT :
- • « Ajouter des images » → sélectionnez plusieurs fichiers à la fois.
- • La 1ère image devient l'image principale (vignette du catalogue).
- • Étoile ★ → définir une autre image comme principale.
+ACOMPTE À LA COMMANDE (règle propre à CHAQUE produit) :
+ • Pourcentage  → ex : 60% du prix (modifiable à tout moment,
+   ex : 30% aujourd'hui, 60% demain).
+ • Montant fixe → ex : 500 000 GNF quel que soit le prix.
+ • Désactivé    → aucun paiement en ligne : le client commande,
+   sa commande est enregistrée et il confirme sur WhatsApp.
+ • Le système de paiement Djomy déduit TOUJOURS automatiquement
+   le montant correspondant à la règle en vigueur.
+ • Les changements s'appliquent immédiatement aux commandes
+   suivantes (les commandes déjà payées restent inchangées).
+
+MÉDIAS DU PRODUIT (IMAGES + VIDÉOS) :
+ • « Ajouter des médias » → images (JPG/PNG/WebP) ET vidéos
+   (MP4) — plusieurs fichiers à la fois.
+ • Les vidéos apparaissent dans la fiche produit : le visiteur
+   peut les lire en plein écran, à côté des photos.
+ • La 1ère IMAGE devient la vignette du catalogue (jamais une
+   vidéo). Étoile ★ → choisir une autre image comme principale.
  • Flèches ← → → réordonner. Corbeille → supprimer.
 
 ──────────────────────────────────────────────────────────────────────
@@ -67,7 +82,8 @@ Chaque commande est créée automatiquement quand un client clique sur
 « Confirmer la commande ». Le statut se met à jour tout seul via le
 paiement Djomy :
 
- • En attente → le client n'a pas encore payé l'acompte.
+ • En attente → le client n'a pas encore payé l'acompte (ou commande
+   sans acompte en ligne : à traiter directement avec le client).
  • Payée       → acompte reçu (confirmation automatique Djomy).
  • Échouée     → paiement incomplet : VÉRIFIEZ avant de produire !
 

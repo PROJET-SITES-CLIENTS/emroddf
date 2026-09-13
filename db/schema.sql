@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS orders (
   product_id         INT REFERENCES products(id) ON DELETE SET NULL,
   product_name       TEXT NOT NULL DEFAULT '',
   price_total        BIGINT NOT NULL DEFAULT 0,  -- Prix authentique lu en base
-  deposit_amount     BIGINT NOT NULL DEFAULT 0,  -- Acompte attendu (60%)
+  deposit_amount     BIGINT NOT NULL DEFAULT 0,  -- Acompte attendu (calculé)
   paid_amount        BIGINT NOT NULL DEFAULT 0,  -- Montant réellement encaissé
   customer_name      TEXT NOT NULL DEFAULT '',
   customer_phone     TEXT NOT NULL DEFAULT '',
@@ -96,3 +96,27 @@ CREATE TABLE IF NOT EXISTS settings (
   value      JSONB NOT NULL,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- ══════════════════════════════════════════════════════════════════
+-- MISES À JOUR v2 — sections/sous-sections, vidéos produits,
+-- acompte personnalisable par produit (idempotent : db:setup rejouable)
+-- ══════════════════════════════════════════════════════════════════
+
+-- Catégories hiérarchiques : parent_id NULL = section, sinon sous-section
+ALTER TABLE categories ADD COLUMN IF NOT EXISTS parent_id INT REFERENCES categories(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_categories_parent ON categories(parent_id);
+
+-- Acompte par produit : 'percent' (deposit_value = %), 'fixed' (GNF), 'none' (paiement désactivé)
+ALTER TABLE products ADD COLUMN IF NOT EXISTS deposit_mode TEXT NOT NULL DEFAULT 'percent';
+ALTER TABLE products ADD COLUMN IF NOT EXISTS deposit_value BIGINT NOT NULL DEFAULT 60;
+DO $$ BEGIN
+  ALTER TABLE products ADD CONSTRAINT chk_products_deposit_mode
+    CHECK (deposit_mode IN ('percent', 'fixed', 'none'));
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+-- Médias produits : images ET vidéos
+ALTER TABLE product_images ADD COLUMN IF NOT EXISTS media_type TEXT NOT NULL DEFAULT 'image';
+DO $$ BEGIN
+  ALTER TABLE product_images ADD CONSTRAINT chk_product_images_media_type
+    CHECK (media_type IN ('image', 'video'));
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;

@@ -9,6 +9,7 @@
 // ══════════════════════════════════════════════════════════════════
 import * as crypto from 'crypto';
 import { db } from '../_lib/db';
+import { computeDeposit } from '../_lib/deposit';
 
 function formatPhoneNumber(phone: string) {
   let clean = phone.replace(/[^0-9+]/g, '');
@@ -63,7 +64,7 @@ export default async function handler(req: any, res: any) {
     // ── 1. Produit + prix AUTHENTIQUE depuis la base ───────────────
     const sql = db();
     const [product] = await sql`
-      SELECT id, name, price FROM products
+      SELECT id, name, price, deposit_mode, deposit_value FROM products
       WHERE id = ${Number(productId)} AND is_published
       LIMIT 1
     `;
@@ -77,11 +78,13 @@ export default async function handler(req: any, res: any) {
       });
     }
 
-    // ── 2. Acompte calculé côté serveur (60%) ──────────────────────
-    const depositRate = 0.6; // aligné sur db.default-settings.json → payment.depositRate
-    const acompteCalcule = Math.round(priceTotal * depositRate);
-    if (!acompteCalcule || acompteCalcule === 0) {
-      return res.status(400).json({ error: "Montant d'acompte invalide." });
+    // ── 2. Acompte selon la règle DU PRODUIT (%, fixe, ou désactivé) ─
+    // computeDeposit retourne null si le paiement est désactivé (mode 'none')
+    const acompteCalcule = computeDeposit(priceTotal, product.deposit_mode, Number(product.deposit_value));
+    if (acompteCalcule === null || acompteCalcule <= 0) {
+      return res.status(400).json({
+        error: "Le paiement en ligne est désactivé pour ce produit. La commande se fait directement auprès de l'atelier.",
+      });
     }
 
     // ── 3. Création de la commande en base (pending) ───────────────
@@ -124,7 +127,7 @@ export default async function handler(req: any, res: any) {
       amount: acompteCalcule,
       countryCode: 'GN',
       payerNumber: formatPhoneNumber(payerNumber),
-      description: `Acompte 60% - ${product.name}`,
+      description: `Acompte - ${product.name}`,
       merchantPaymentReference: reference,
       returnUrl: `${baseUrl}/payment/success?ref=${reference}`,
       cancelUrl: `${baseUrl}/payment/cancel?ref=${reference}`,

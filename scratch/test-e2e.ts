@@ -74,6 +74,8 @@ async function main() {
   const leadsPublicH = (await import('../api/public/leads')).default;
   const paymentCreateH = (await import('../api/payment/create')).default;
   const webhookH = (await import('../api/payment/webhook')).default;
+  const publicOrdersH = (await import('../api/public/orders')).default;
+  const { computeDeposit } = await import('../api/_lib/deposit');
   const { neon } = await import('@neondatabase/serverless');
   const sql = neon(process.env.DATABASE_URL!) as any;
 
@@ -308,7 +310,111 @@ async function main() {
     res = await call(statsH, mockReq({ headers: authHeaders }));
     check('stats dashboard cohérentes', res.statusCode === 200 && res.body.orders_paid >= 1 && res.body.revenue >= 1200000 && res.body.recentLeads.length >= 1);
 
-    /* ══ 11. DÉCONNEXION ══════════════════════════════════════════ */
+    /* ══ 11. NOUVEAUTÉS V2 — hiérarchie, vidéos, acomptes ═════════ */
+    console.log('\n══ 11. NOUVEAUTÉS V2 — HIÉRARCHIE · VIDÉOS · ACOMPTES ══');
+
+    // ── 11a. Calcul d'acompte (logique partagée) ──────────────────
+    check('computeDeposit 60% de 2 000 000 = 1 200 000', computeDeposit(2000000, 'percent', 60) === 1200000);
+    check('computeDeposit 30% de 1 000 000 = 300 000', computeDeposit(1000000, 'percent', 30) === 300000);
+    check('computeDeposit fixe 500 000 = 500 000', computeDeposit(2000000, 'fixed', 500000) === 500000);
+    check('computeDeposit mode none → null (désactivé)', computeDeposit(2000000, 'none', 60) === null);
+    check('computeDeposit pourcentage 0 → null (invalide)', computeDeposit(2000000, 'percent', 0) === null);
+    check('computeDeposit borné à 100%', computeDeposit(1000000, 'percent', 150) === 1000000);
+
+    // ── 11b. Sections / sous-sections ─────────────────────────────
+    res = await call(categoriesH, mockReq({ method: 'POST', headers: authHeaders, body: { name: 'Chambres E2E' } }));
+    const sectionId = res.body.id; created.cats.push(sectionId);
+    check('création section', res.statusCode === 201 && res.body.parent_id === null);
+
+    res = await call(categoriesH, mockReq({ method: 'POST', headers: authHeaders, body: { name: 'Lits E2E', parentId: sectionId } }));
+    const subId = res.body.id; created.cats.push(subId);
+    check('création sous-section (rattachée)', res.statusCode === 201 && res.body.parent_id === sectionId);
+
+    res = await call(categoryH, mockReq({ method: 'PUT', headers: authHeaders, query: { id: sectionId }, body: { parentId: subId } }));
+    check('section avec enfants → ne peut devenir sous-section (400)', res.statusCode === 400);
+    res = await call(categoryH, mockReq({ method: 'PUT', headers: authHeaders, query: { id: subId }, body: { parentId: subId } }));
+    check('auto-parentage impossible (400)', res.statusCode === 400);
+    res = await call(categoriesH, mockReq({ method: 'POST', headers: authHeaders, body: { name: 'Sous-Sous E2E', parentId: subId } }));
+    check('3e niveau refusé (400)', res.statusCode === 400);
+
+    // Produit dans la sous-section
+    res = await call(productsH, mockReq({ method: 'POST', headers: authHeaders, body: {
+      name: 'Lit King E2E', categoryId: subId, price: 8000000, depositMode: 'percent', depositValue: 25,
+    } }));
+    const litId = res.body.id; created.prods.push(litId);
+    check('produit créé dans sous-section (acompte 25%)', res.statusCode === 201 && res.body.deposit_mode === 'percent' && Number(res.body.deposit_value) === 25);
+
+    res = await call(catalogueH, mockReq({}));
+    const litProd = res.body.products.find((p: any) => p.id === litId);
+    const catInfo = res.body.categories.find((c: any) => c.id === subId);
+    check('catalogue : sous-section expose parentName/parentSlug', catInfo?.parentName === 'Chambres E2E' && catInfo?.parentSlug === 'chambres-e2e');
+    check('catalogue : produit hérite sectionSlug de sa section', litProd?.sectionSlug === 'chambres-e2e' && litProd?.categorySlug === 'lits-e2e');
+    check('catalogue : règle acompte transmise (25%)', litProd?.depositMode === 'percent' && litProd?.depositValue === 25);
+
+    res = await call(productPublicH, mockReq({ query: { categorySlug: 'lits-e2e', modelSlug: 'lit-king-e2e' } }));
+    check('détail public : accessible par slug de sous-section + acompte', res.statusCode === 200 && res.body.depositValue === 25);
+
+    // ── 11c. Vidéos dans les produits ─────────────────────────────
+    res = await call(productImagesH, mockReq({ method: 'POST', headers: authHeaders, query: { id: litId }, body: { url: 'https://exemple.com/lit-video.mp4', mediaType: 'video' } }));
+    const videoMediaId = res.body.id;
+    check('ajout vidéo au produit', res.statusCode === 201 && res.body.media_type === 'video' && res.body.is_main === false);
+
+    res = await call(productImagesH, mockReq({ method: 'POST', headers: authHeaders, query: { id: litId }, body: { url: 'https://exemple.com/lit-1.jpg' } }));
+    check('image ajoutée APRÈS la vidéo devient principale', res.statusCode === 201 && res.body.is_main === true);
+
+    res = await call(productImagesH, mockReq({ method: 'PUT', headers: authHeaders, query: { id: litId }, body: { mainImageId: videoMediaId } }));
+    check('vidéo comme principale → refusé (400)', res.statusCode === 400);
+
+    res = await call(catalogueH, mockReq({}));
+    const litCounts = res.body.products.find((p: any) => p.id === litId);
+    check('catalogue : compteurs photos/vidéos distincts', litCounts?.videoCount === 1 && litCounts?.imageCount === 1 && litCounts?.mainImageUrl?.includes('lit-1'));
+
+    // ── 11d. Acomptes personnalisés + commande sans acompte ───────
+    // Produit sans paiement en ligne
+    res = await call(productsH, mockReq({ method: 'POST', headers: authHeaders, body: {
+      name: 'Armoire Sans Acompte E2E', categoryId: catId, price: 3000000, depositMode: 'none',
+    } }));
+    const noDepId = res.body.id; created.prods.push(noDepId);
+    check('produit avec paiement désactivé (mode none)', res.statusCode === 201 && res.body.deposit_mode === 'none');
+
+    // Produit avec acompte fixe
+    res = await call(productsH, mockReq({ method: 'POST', headers: authHeaders, body: {
+      name: 'Console Acompte Fixe E2E', categoryId: catId, price: 1000000, depositMode: 'fixed', depositValue: 200000,
+    } }));
+    const fixeId = res.body.id; created.prods.push(fixeId);
+    check('produit avec acompte fixe (200 000 GNF)', res.statusCode === 201 && res.body.deposit_mode === 'fixed');
+
+    // Le paiement en ligne est refusé pour un produit 'none'
+    res = await call(paymentCreateH, mockReq({ method: 'POST', body: { productId: noDepId, payerNumber: '622000000', nom: 'Test' } }));
+    check('paiement refusé pour produit sans acompte (400)', res.statusCode === 400 && /désactivé/i.test(res.body.error));
+
+    // La commande SANS acompte est refusée pour un produit AVEC acompte (anti-contournement)
+    res = await call(publicOrdersH, mockReq({ method: 'POST', body: { productId: prodId, nom: 'Malin', telephone: '622000000', adresse: 'Conakry' } }));
+    check('commande sans acompte refusée pour produit avec acompte (400)', res.statusCode === 400);
+
+    // La commande SANS acompte fonctionne pour un produit 'none'
+    res = await call(publicOrdersH, mockReq({ method: 'POST', body: { productId: noDepId, nom: 'Aissatou', prenom: 'Bah', telephone: '622111222', adresse: 'Sonfonia, Conakry' } }));
+    check('commande sans acompte → 201 + référence', res.statusCode === 201 && res.body.reference?.startsWith('EMROD-'));
+    const noDepOrderRef = res.body.reference;
+    const [noDepOrder] = await sql`SELECT id, payment_status, deposit_amount, metadata FROM orders WHERE reference = ${noDepOrderRef}`;
+    created.orders.push(noDepOrder.id);
+    check('commande enregistrée : pending, acompte 0, marqueur noDeposit', noDepOrder.payment_status === 'pending' && Number(noDepOrder.deposit_amount) === 0 && noDepOrder.metadata?.noDeposit === true);
+
+    // Changement de règle en cours de route : 25% → 60% → fixe
+    await call(productH, mockReq({ method: 'PUT', headers: authHeaders, query: { id: litId }, body: { depositValue: 60 } }));
+    res = await call(productPublicH, mockReq({ query: { categorySlug: 'lits-e2e', modelSlug: 'lit-king-e2e' } }));
+    check('modification règle 25% → 60% visible côté public', res.body.depositValue === 60 && res.body.depositMode === 'percent');
+    await call(productH, mockReq({ method: 'PUT', headers: authHeaders, query: { id: litId }, body: { depositMode: 'fixed', depositValue: 500000 } }));
+    res = await call(productPublicH, mockReq({ query: { categorySlug: 'lits-e2e', modelSlug: 'lit-king-e2e' } }));
+    check('bascule en acompte fixe visible côté public', res.body.depositMode === 'fixed' && res.body.depositValue === 500000);
+
+    // Suppression d'une section → sous-section promue, produit conservé
+    res = await call(categoryH, mockReq({ method: 'DELETE', headers: authHeaders, query: { id: sectionId } }));
+    created.cats = created.cats.filter((c) => c !== sectionId);
+    const [promotedSub] = await sql`SELECT parent_id FROM categories WHERE id = ${subId}`;
+    check('suppression section → sous-section promue en section', res.statusCode === 200 && promotedSub.parent_id === null);
+
+    /* ══ 12. DÉCONNEXION ══════════════════════════════════════════ */
     console.log('\n══ 11. DÉCONNEXION ══');
     res = await call(logout, mockReq({ method: 'POST', headers: authHeaders }));
     check('logout → cookie effacé', res.statusCode === 200 && res.cookies.some((c: string) => c.includes('Max-Age=0')));

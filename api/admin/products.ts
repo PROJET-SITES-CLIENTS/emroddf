@@ -2,10 +2,19 @@
 // GET  /api/admin/products — liste admin (incl. non publiés)
 // POST /api/admin/products — création produit
 //   { name, categoryId?, description?, price?, dimensions?, finition?,
-//     essence?, isPublished?, position? }
+//     essence?, isPublished?, position?,
+//     depositMode? ('percent'|'fixed'|'none'), depositValue? }
 // ══════════════════════════════════════════════════════════════════
 import { requireAdmin } from '../_lib/auth';
 import { db, uniqueSlug } from '../_lib/db';
+
+const DEPOSIT_MODES = ['percent', 'fixed', 'none'];
+
+export function parseDeposit(body: any): { mode: string; value: number } {
+  const mode = DEPOSIT_MODES.includes(body.depositMode) ? body.depositMode : 'percent';
+  const value = Math.max(0, Math.round(Number(body.depositValue) || 0));
+  return { mode, value };
+}
 
 export default async function handler(req: any, res: any) {
   if (!requireAdmin(req, res)) return;
@@ -17,13 +26,19 @@ export default async function handler(req: any, res: any) {
       const rows = await sql`
         SELECT p.id, p.name, p.slug, p.description, p.price, p.dimensions,
                p.finition, p.essence, p.is_published, p.position, p.created_at,
+               p.deposit_mode, p.deposit_value,
                p.category_id, c.name AS category_name, c.slug AS category_slug,
+               pc.name AS section_name,
                (SELECT pi.url FROM product_images pi
-                 WHERE pi.product_id = p.id
+                 WHERE pi.product_id = p.id AND pi.media_type = 'image'
                  ORDER BY pi.is_main DESC, pi.position, pi.id LIMIT 1) AS main_image_url,
-               (SELECT COUNT(*)::int FROM product_images pi WHERE pi.product_id = p.id) AS image_count
+               (SELECT COUNT(*)::int FROM product_images pi
+                 WHERE pi.product_id = p.id AND pi.media_type = 'image') AS image_count,
+               (SELECT COUNT(*)::int FROM product_images pi
+                 WHERE pi.product_id = p.id AND pi.media_type = 'video') AS video_count
         FROM products p
         LEFT JOIN categories c ON c.id = p.category_id
+        LEFT JOIN categories pc ON pc.id = c.parent_id
         ORDER BY p.position, p.created_at DESC
       `;
       return res.status(200).json(rows);
@@ -36,10 +51,11 @@ export default async function handler(req: any, res: any) {
 
       const categoryId = Number(body.categoryId) || null;
       const price = Math.max(0, Math.round(Number(body.price) || 0));
+      const { mode: depositMode, value: depositValue } = parseDeposit(body);
       const slug = await uniqueSlug('products', name);
 
       const [row] = await sql`
-        INSERT INTO products (category_id, name, slug, description, price, dimensions, finition, essence, is_published, position)
+        INSERT INTO products (category_id, name, slug, description, price, dimensions, finition, essence, is_published, position, deposit_mode, deposit_value)
         VALUES (
           ${categoryId},
           ${name},
@@ -50,9 +66,11 @@ export default async function handler(req: any, res: any) {
           ${String(body.finition || '').slice(0, 300)},
           ${String(body.essence || '').slice(0, 300)},
           ${body.isPublished !== false},
-          ${Number(body.position) || 0}
+          ${Number(body.position) || 0},
+          ${depositMode},
+          ${depositValue}
         )
-        RETURNING id, name, slug, created_at
+        RETURNING id, name, slug, deposit_mode, deposit_value, created_at
       `;
       return res.status(201).json(row);
     }

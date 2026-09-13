@@ -16,12 +16,13 @@ import {
 } from "lucide-react";
 import { useParams, Link } from "react-router-dom";
 import OrderModal from "../components/OrderModal";
-import { fetchProductDetail } from "../lib/api";
+import { fetchProductDetail, isVideoFile, computeDeposit } from "../lib/api";
 import heroBg from "../assets/images/hero-bg.jpg";
 
-interface ProductImage {
+interface ProductMedia {
   id: number;
   url: string;
+  mediaType: 'image' | 'video';
 }
 
 interface ProductDetailData {
@@ -34,7 +35,9 @@ interface ProductDetailData {
   dimensions?: string;
   finition?: string;
   essence?: string;
-  images: ProductImage[];
+  depositMode: 'percent' | 'fixed' | 'none';
+  depositValue: number;
+  images: ProductMedia[];
 }
 
 function formatPrice(num: number): string {
@@ -123,12 +126,15 @@ export default function ProductDetail() {
   const displayFinition = product.finition || "Premium";
   const displayEssence = product.essence || "Bois massif";
 
-  const acompteNumeric = Math.round(displayPrixNumeric * 0.6);
-  const acompte = displayPrixNumeric
-    ? formatPrice(acompteNumeric)
-    : "À calculer";
+  // Acompte selon la règle définie pour ce produit dans le tableau de bord
+  const depositAmount = computeDeposit(displayPrixNumeric, product.depositMode, product.depositValue);
+  const paymentEnabled = product.depositMode !== 'none' && depositAmount !== null && depositAmount > 0;
+  const depositLabel =
+    product.depositMode === 'percent'
+      ? `Acompte à la commande (${product.depositValue}%) :`
+      : "Acompte à la commande :";
+  const acompte = paymentEnabled && depositAmount ? formatPrice(depositAmount) : "À calculer";
 
-// ... (in ProductDetail.tsx)
   return (
     <div className="min-h-screen bg-transparent text-foreground pt-32 pb-24">
       <div className="container mx-auto max-w-7xl px-6 md:px-12">
@@ -153,17 +159,42 @@ export default function ProductDetail() {
               {product.images && product.images.length > 0 ? (
                 <>
                   <AnimatePresence mode="wait">
-                    <motion.img
-                      key={currentImage?.id}
-                      src={currentImage?.url}
-                      alt={product.name}
-                      className="w-full h-full object-cover"
-                      initial={{ opacity: 0, filter: "blur(10px)" }}
-                      animate={{ opacity: 1, filter: "blur(0px)" }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.4 }}
-                    />
+                    {currentImage?.mediaType === 'video' ? (
+                      <motion.div
+                        key={`video-${currentImage?.id}`}
+                        className="w-full h-full flex items-center justify-center bg-black/90"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.4 }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {isVideoFile(currentImage!.url) ? (
+                          <video src={currentImage!.url} controls autoPlay playsInline className="w-full h-full object-contain" />
+                        ) : (
+                          <iframe src={currentImage!.url} className="w-full h-full" allow="autoplay; fullscreen" title="Vidéo du produit" />
+                        )}
+                      </motion.div>
+                    ) : (
+                      <motion.img
+                        key={currentImage?.id}
+                        src={currentImage?.url}
+                        alt={product.name}
+                        className="w-full h-full object-cover"
+                        initial={{ opacity: 0, filter: "blur(10px)" }}
+                        animate={{ opacity: 1, filter: "blur(0px)" }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.4 }}
+                      />
+                    )}
                   </AnimatePresence>
+
+                  {/* Badge vidéo */}
+                  {currentImage?.mediaType === 'video' && (
+                    <span className="absolute top-4 left-4 text-[10px] font-bold uppercase tracking-wider text-white px-3 py-1.5 rounded-sm z-10 pointer-events-none" style={{ background: 'rgba(232,93,4,0.9)' }}>
+                      ▶ Vidéo
+                    </span>
+                  )}
 
                   {/* Hover Overlay */}
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 flex items-center justify-center">
@@ -213,12 +244,23 @@ export default function ProductDetail() {
                         : "opacity-50 hover:opacity-100"
                     }`}
                   >
-                    <img
-                      src={img.url}
-                      alt={product.name}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
+                    {img.mediaType === 'video' ? (
+                      isVideoFile(img.url) ? (
+                        <video src={img.url} muted playsInline preload="metadata" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-secondary text-foreground/60 text-lg">▶</div>
+                      )
+                    ) : (
+                      <img
+                        src={img.url}
+                        alt={product.name}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    )}
+                    {img.mediaType === 'video' && (
+                      <span className="absolute bottom-1 right-1 text-[8px] font-bold uppercase bg-black/70 text-white px-1 rounded-sm">VID</span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -250,10 +292,15 @@ export default function ProductDetail() {
                   {displayPrix}
                 </span>
               </div>
-              {displayPrixNumeric > 0 && (
+              {paymentEnabled && (
                 <div className="inline-flex items-center gap-2 text-xs text-accent bg-accent/10 px-3 py-1.5 rounded-sm border border-accent/20">
-                  <span className="font-medium">Acompte à la commande (60%) :</span>
+                  <span className="font-medium">{depositLabel}</span>
                   <span className="font-medium">{acompte}</span>
+                </div>
+              )}
+              {!paymentEnabled && displayPrixNumeric > 0 && (
+                <div className="inline-flex items-center gap-2 text-xs text-foreground/60 bg-secondary/60 px-3 py-1.5 rounded-sm border border-border/50">
+                  <span className="font-medium">Commande sans acompte en ligne — règlement direct avec l'atelier</span>
                 </div>
               )}
             </div>
@@ -328,7 +375,9 @@ export default function ProductDetail() {
             {/* Legal note */}
             <div className="mt-8 p-4 bg-secondary/20 rounded-sm border border-border/30">
               <p className="text-[10px] text-foreground/50 leading-relaxed font-medium">
-                * Le délai de fabrication vous sera communiqué lors de la confirmation avec notre équipe. L'acompte de 60% valide le lancement de la production.
+                {paymentEnabled
+                  ? `* Le délai de fabrication vous sera communiqué lors de la confirmation avec notre équipe. L'acompte${product.depositMode === 'percent' ? ` de ${product.depositValue}%` : ` de ${acompte}`} valide le lancement de la production.`
+                  : "* Le délai et les modalités de règlement vous seront communiqués lors de la confirmation avec notre équipe. Aucun paiement n'est demandé en ligne pour ce modèle."}
               </p>
             </div>
           </motion.div>
@@ -343,6 +392,8 @@ export default function ProductDetail() {
         produit={product.name}
         prix={displayPrix}
         prixNumeric={displayPrixNumeric}
+        depositMode={product.depositMode}
+        depositValue={product.depositValue}
       />
 
       {/* Lightbox */}
@@ -381,17 +432,25 @@ export default function ProductDetail() {
               )}
 
               <div className="relative w-full max-w-[95vw] h-[90vh] flex items-center justify-center">
-                <motion.img
-                  key={currentImage?.id}
-                  src={currentImage?.url}
-                  alt={product.name}
-                  initial={{ scale: 0.9, opacity: 0, filter: "blur(10px)" }}
-                  animate={{ scale: 1, opacity: 1, filter: "blur(0px)" }}
-                  exit={{ scale: 0.9, opacity: 0, filter: "blur(10px)" }}
-                  transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-                  className="max-w-full max-h-full object-contain cursor-default drop-shadow-2xl"
-                  onClick={(e) => e.stopPropagation()}
-                />
+                {currentImage?.mediaType === 'video' ? (
+                  isVideoFile(currentImage!.url) ? (
+                    <video src={currentImage!.url} controls autoPlay playsInline className="max-w-full max-h-full object-contain cursor-default" onClick={(e) => e.stopPropagation()} />
+                  ) : (
+                    <iframe src={currentImage!.url} className="w-[90vw] md:w-[75vw] h-[80vh] bg-black rounded-sm" allow="autoplay; fullscreen" title="Vidéo du produit" />
+                  )
+                ) : (
+                  <motion.img
+                    key={currentImage?.id}
+                    src={currentImage?.url}
+                    alt={product.name}
+                    initial={{ scale: 0.9, opacity: 0, filter: "blur(10px)" }}
+                    animate={{ scale: 1, opacity: 1, filter: "blur(0px)" }}
+                    exit={{ scale: 0.9, opacity: 0, filter: "blur(10px)" }}
+                    transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+                    className="max-w-full max-h-full object-contain cursor-default drop-shadow-2xl"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                )}
               </div>
               
               {product.images.length > 1 && (
