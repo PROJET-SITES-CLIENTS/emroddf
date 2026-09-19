@@ -4,7 +4,7 @@ process.env.ADMIN_EMAIL = 'Admin@EMRODdf.com ';
 process.env.ADMIN_PASSWORD = 'MotDePasse123';
 
 async function main() {
-  const mod = await import('../api/_lib/auth');
+  const mod = await import('../api/router');
   const { createSessionToken, verifySessionToken, checkCredentials, requireAdmin } = mod;
 
   // 1. Roundtrip token valide
