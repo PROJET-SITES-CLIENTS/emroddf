@@ -1,5 +1,5 @@
 // ══════════════════════════════════════════════════════════════════
-// TEST DU ROUTEUR UNIQUE api/[[...path]].ts
+// TEST DU ROUTEUR UNIQUE api/[...path].ts
 // Vérifie le dispatch réel (URL + méthode + corps + auth + HMAC webhook)
 // Usage : npx tsx scratch/test-router.ts
 // ══════════════════════════════════════════════════════════════════
@@ -50,7 +50,7 @@ function makeRes() {
 }
 
 async function main() {
-  const router = (await import('../api/[[...path]]')).default;
+  const router = (await import('../api/[...path]')).default;
   const { neon } = await import('@neondatabase/serverless');
   const sql = neon(process.env.DATABASE_URL!) as any;
   const cleanup: string[] = [];
