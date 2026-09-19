@@ -117,6 +117,34 @@ function parseUrl(rawUrl: string = ''): { segments: string[]; query: Record<stri
   return { segments, query };
 }
 
+/**
+ * Résout la route réelle :
+ *  - soit appel direct : /api/public/catalogue?x=1
+ *  - soit appel réécrit par vercel.json : /api/router?__route=/public/catalogue&x=1
+ * Retourne l'URL d'origine reconstruite (nécessaire aux bibliothèques qui
+ * inspectent req.url, comme l'upload Vercel Blob).
+ */
+function resolveRequest(rawUrl: string = ''): { url: string; segments: string[]; query: Record<string, string> } {
+  let [pathPart, queryPart = ''] = rawUrl.split('?');
+  const query: Record<string, string> = {};
+  for (const pair of queryPart.split('&')) {
+    const [k, v = ''] = pair.split('=');
+    if (k) query[decodeURIComponent(k)] = decodeURIComponent(v);
+  }
+  if ((pathPart === '/api/router' || pathPart === '/api/router/') && query.__route) {
+    const route = query.__route.startsWith('/') ? query.__route : `/${query.__route}`;
+    delete query.__route;
+    pathPart = `/api${decodeURIComponent(route)}`;
+  }
+  const segments = pathPart
+    .replace(/^\/api\/?/, '')
+    .split('/')
+    .filter(Boolean)
+    .map((s) => decodeURIComponent(s));
+  const qs = Object.entries(query).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&');
+  return { url: qs ? `${pathPart}?${qs}` : pathPart, segments, query };
+}
+
 /** Correspondance route ⟷ segments (avec paramètres ':name') */
 function matchRoute(route: Route, segments: string[]): Record<string, string> | null {
   if (route.segments.length !== segments.length) return null;
@@ -143,7 +171,10 @@ async function parseBody(req: IncomingMessage): Promise<void> {
 }
 
 export default async function handler(req: IncomingMessage & { query?: any }, res: ServerResponse) {
-  const { segments, query } = parseUrl(req.url || '');
+  const { url: originalUrl, segments, query } = resolveRequest(req.url || '');
+  // Les handlers et les bibliothèques (upload Blob) inspectent req.url :
+  // on restaure toujours l'URL d'origine
+  req.url = originalUrl;
   const method = (req.method || 'GET').toUpperCase();
 
   const route = ROUTES.map((r) => ({ r, params: matchRoute(r, segments) })).find((x) => x.params !== null);

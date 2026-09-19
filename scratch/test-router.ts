@@ -50,7 +50,7 @@ function makeRes() {
 }
 
 async function main() {
-  const router = (await import('../api/[...path]')).default;
+  const router = (await import('../api/router')).default;
   const { neon } = await import('@neondatabase/serverless');
   const sql = neon(process.env.DATABASE_URL!) as any;
   const cleanup: string[] = [];
@@ -71,6 +71,15 @@ async function main() {
     // 2. Route avec query string
     res = await fire({ url: '/api/public/catalogue?x=1' });
     check('GET /api/public/catalogue → 200 + structure', res.statusCode === 200 && 'products' in res.body && 'categories' in res.body);
+
+    // 2b. Forme RÉÉCRITE par vercel.json (comme en production Vercel)
+    res = await fire({ url: '/api/router?__route=/public/catalogue&x=1' });
+    check('appel réécrit /api/router?__route=... → même résultat', res.statusCode === 200 && 'products' in res.body);
+    res = await fire({ method: 'POST', url: '/api/router?__route=/public/leads', body: { firstName: 'Rewrite', phone: '600000003', source: 'test_rewrite' } });
+    check('appel réécrit POST leads → 201', res.statusCode === 201);
+    await sql`DELETE FROM leads WHERE source = 'test_rewrite'`;
+    res = await fire({ url: '/api/router?__route=/public/product/divers/inconnu-xyz' });
+    check('appel réécrit produit inconnu → 404', res.statusCode === 404);
 
     // 3. Route paramétrée (2 niveaux) + 404
     res = await fire({ url: '/api/public/product/divers/inconnu-xyz' });
