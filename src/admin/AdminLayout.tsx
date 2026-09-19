@@ -5,7 +5,7 @@ import { NavLink, Outlet } from 'react-router-dom';
 import { useState } from 'react';
 import {
   LayoutDashboard, Sofa, Images, Users, ShoppingBag, Settings,
-  LogOut, Menu, X, ExternalLink,
+  LogOut, Menu, X, ExternalLink, KeyRound,
 } from 'lucide-react';
 import { api } from '../lib/adminApi';
 
@@ -65,8 +65,20 @@ export default function AdminLayout() {
         ))}
       </nav>
 
-      {/* Pied : lien site public + déconnexion */}
+      {/* Pied : compte, lien site public + déconnexion */}
       <div className="px-3 py-4 border-t border-white/10 space-y-1">
+        <NavLink
+          to="/admin/compte"
+          onClick={() => setMobileOpen(false)}
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-4 py-3 rounded-sm text-sm transition ${
+              isActive ? 'bg-white/10 text-white border-l-2 border-[#e85d04]' : 'text-white/60 hover:text-white hover:bg-white/5'
+            }`
+          }
+        >
+          <KeyRound className="w-[18px] h-[18px]" />
+          Mon compte
+        </NavLink>
         <a
           href="/"
           target="_blank"

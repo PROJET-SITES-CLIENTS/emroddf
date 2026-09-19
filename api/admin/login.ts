@@ -10,7 +10,7 @@ export default async function handler(req: any, res: any) {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body || {};
     const { email, password } = body;
 
-    if (!email || !password || !checkCredentials(email, password)) {
+    if (!email || !password || !(await checkCredentials(email, password))) {
       // Petit délai pour ralentir le brute-force
       await new Promise((r) => setTimeout(r, 600));
       return res.status(401).json({ error: 'Identifiants incorrects' });

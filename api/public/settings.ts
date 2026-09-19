@@ -1,9 +1,12 @@
 // ══════════════════════════════════════════════════════════════════
 // GET /api/public/settings
 // Tous les paramètres du site, fusionnés sur les valeurs par défaut.
+// ⚠️ Les clés sensibles (smtp, adminPassword) ne sont JAMAIS exposées.
 // ══════════════════════════════════════════════════════════════════
 import { getAllSettings } from '../_lib/db';
 import defaults from '../../db/default-settings.json';
+
+const SENSITIVE_KEYS = ['smtp', 'adminPassword'];
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
@@ -20,6 +23,7 @@ export default async function handler(req: any, res: any) {
     // Fusion profonde simple : les valeurs en base écrasent les défauts
     const merged: Record<string, any> = { ...defaults };
     for (const key of Object.keys(defaults as Record<string, any>)) {
+      if (SENSITIVE_KEYS.includes(key)) continue;
       if (stored[key] !== undefined && stored[key] !== null) {
         const dv = (defaults as Record<string, any>)[key];
         merged[key] =
@@ -28,9 +32,9 @@ export default async function handler(req: any, res: any) {
             : stored[key];
       }
     }
-    // Sections custom ajoutées par l'admin (hors défauts)
+    // Sections custom ajoutées par l'admin (hors défauts) — sauf sensibles
     for (const key of Object.keys(stored)) {
-      if (!(key in merged)) merged[key] = stored[key];
+      if (!(key in merged) && !SENSITIVE_KEYS.includes(key)) merged[key] = stored[key];
     }
 
     return res.status(200).json(merged);

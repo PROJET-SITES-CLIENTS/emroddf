@@ -13,6 +13,7 @@ import GalleryManager from './pages/GalleryManager';
 import LeadsManager from './pages/LeadsManager';
 import OrdersManager from './pages/OrdersManager';
 import SettingsManager from './pages/SettingsManager';
+import AccountSettings from './pages/AccountSettings';
 
 /* ── Écran de connexion ──────────────────────────────────────────── */
 function Login() {
@@ -154,6 +155,7 @@ export default function AdminApp() {
             <Route path="prospects" element={<LeadsManager />} />
             <Route path="commandes" element={<OrdersManager />} />
             <Route path="parametres" element={<SettingsManager />} />
+            <Route path="compte" element={<AccountSettings />} />
             <Route path="*" element={<Navigate to="/admin" replace />} />
           </Route>
         </Routes>

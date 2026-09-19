@@ -37,8 +37,9 @@ npm run migrate:drive  # migration unique Google Drive → Neon/Blob (abandonné
 |---|---|
 | `DATABASE_URL` | Connexion PostgreSQL Neon |
 | `BLOB_READ_WRITE_TOKEN` | Token Vercel Blob (téléversement des médias) |
-| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Identifiants du tableau de bord `/admin` |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Identifiants initiaux du tableau de bord (le mot de passe est ensuite modifiable dans « Mon compte ») |
 | `ADMIN_SESSION_SECRET` | Secret de signature des sessions (chaîne aléatoire longue) |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` / `NOTIFY_EMAIL` | *(Optionnel)* Notifications email — alternative configurable directement dans le tableau de bord |
 | `DJOMY_CLIENT_ID` / `DJOMY_CLIENT_SECRET` / `DJOMY_PARTNER_DOMAIN` | API de paiement Djomy |
 | `VITE_PUBLIC_URL` | URL publique du site (redirections paiement) |
 

@@ -5,6 +5,7 @@
 // le client confirme ensuite via WhatsApp.
 // ══════════════════════════════════════════════════════════════════
 import { db } from '../_lib/db';
+import { sendNotification } from '../_lib/mailer';
 
 const clean = (v: unknown, max: number) => String(v ?? '').trim().slice(0, max);
 
@@ -48,6 +49,22 @@ export default async function handler(req: any, res: any) {
               ${`${nom} ${prenom}`.trim()}, ${telephone}, ${adresse}, 'pending',
               ${JSON.stringify({ noDeposit: true, mode: 'none' })}::jsonb)
     `;
+
+    // Notification email (ne bloque jamais le flux principal)
+    const price = Number(product.price) || 0;
+    await sendNotification(
+      `🧾 Nouvelle commande sans acompte — ${product.name}`,
+      [
+        ['Référence', reference],
+        ['Produit', product.name],
+        ['Prix', price > 0 ? `${new Intl.NumberFormat('fr-FR').format(price)} GNF` : 'Sur devis'],
+        ['Client', `${nom} ${prenom}`.trim()],
+        ['Téléphone', telephone],
+        ['Adresse', adresse || '—'],
+        ['Paiement', 'Sans acompte en ligne — à organiser avec le client'],
+      ],
+      { label: 'Voir dans le tableau de bord', url: `${process.env.VITE_PUBLIC_URL || ''}/admin/commandes` }
+    ).catch(() => {});
 
     return res.status(201).json({ success: true, reference });
   } catch (err: any) {

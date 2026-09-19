@@ -103,7 +103,24 @@ exporter la liste en CSV.
  • FAQ Contact        : les questions/réponses de la page Contact.
  • À propos           : paragraphes, citation et étapes du processus.
  • PDF Catalogue      : téléversez le PDF téléchargeable du site.
+ • Notifications      : configuration SMTP des emails automatiques.
  • SEO                : titre et description pour Google.
+
+📧 NOTIFICATIONS EMAIL (onglet « Notifications ») :
+ • Recevez un email à chaque : nouveau prospect, commande sans
+   acompte, paiement d'acompte reçu, alerte fraude.
+ • Renseignez votre serveur SMTP (Gmail : smtp.gmail.com, port 587,
+   avec un « mot de passe d'application » ; Brevo :
+   smtp-relay.brevo.com...), puis cliquez « Envoyer un email de
+   test » après avoir ENREGISTRÉ.
+ • Laissez tout vide pour désactiver les notifications : le site
+   fonctionne normalement sans email.
+
+🔑 MON COMPTE (en bas de la barre latérale) :
+ • Changez le mot de passe administrateur directement depuis le
+   tableau de bord (8 caractères minimum).
+ • Le mot de passe initial (défini chez Vercel) cesse de
+   fonctionner dès qu'un mot de passe est défini ici.
 
 ⚠️ Pensez à cliquer sur « Enregistrer » après chaque onglet modifié.
 

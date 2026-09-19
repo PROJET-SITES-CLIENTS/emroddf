@@ -5,6 +5,7 @@
 // Anti-spam : champ pot de miel "website" + limites de longueur.
 // ══════════════════════════════════════════════════════════════════
 import { db } from '../_lib/db';
+import { sendNotification } from '../_lib/mailer';
 
 const MAX = {
   firstName: 100, lastName: 100, phone: 40, email: 200,
@@ -48,6 +49,20 @@ export default async function handler(req: any, res: any) {
         ${clean(body.source ?? body.type, MAX.source)}
       )
     `;
+
+    // Notification email (ne bloque jamais le flux principal)
+    await sendNotification(
+      `🆕 Nouveau prospect — ${firstName} ${clean(body.lastName ?? body.nom, MAX.lastName)}`.trim(),
+      [
+        ['Nom', `${firstName} ${clean(body.lastName ?? body.nom, MAX.lastName)}`.trim()],
+        ['Téléphone', phone || '—'],
+        ['Email', email || '—'],
+        ['Service', clean(body.serviceType, MAX.serviceType) || '—'],
+        ['Source', clean(body.source ?? body.type, MAX.source) || '—'],
+        ['Message', clean(body.message, MAX.message) || '—'],
+      ],
+      { label: 'Voir dans le tableau de bord', url: `${process.env.VITE_PUBLIC_URL || ''}/admin/prospects` }
+    ).catch(() => {});
 
     return res.status(201).json({ success: true });
   } catch (err: any) {

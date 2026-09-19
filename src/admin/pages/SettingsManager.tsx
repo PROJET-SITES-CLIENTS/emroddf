@@ -4,7 +4,7 @@
 // ══════════════════════════════════════════════════════════════════
 import { useEffect, useState, useRef } from 'react';
 import {
-  Save, Loader2, Plus, Trash2, ChevronUp, ChevronDown, Upload, X, FileText,
+  Save, Loader2, Plus, Trash2, ChevronUp, ChevronDown, Upload, X, FileText, Send,
 } from 'lucide-react';
 import { api } from '../../lib/adminApi';
 
@@ -154,6 +154,7 @@ const TABS = [
   { key: 'faqContact', label: 'FAQ Contact' },
   { key: 'about', label: 'À propos' },
   { key: 'catalogPdf', label: 'PDF Catalogue' },
+  { key: 'smtp', label: 'Notifications' },
   { key: 'seo', label: 'SEO' },
 ];
 
@@ -370,6 +371,9 @@ export default function SettingsManager() {
         {/* ── PDF CATALOGUE ────────────────────────────────────── */}
         {tab === 'catalogPdf' && <CatalogPdfSection url={s.catalogPdf?.url || ''} onChange={(url) => setSection('catalogPdf', { url })} />}
 
+        {/* ── NOTIFICATIONS (SMTP) ──────────────────────────────── */}
+        {tab === 'smtp' && <SmtpSection smtp={s.smtp || {}} onChange={(v) => setSection('smtp', v)} />}
+
         {/* ── SEO ──────────────────────────────────────────────── */}
         {tab === 'seo' && (
           <div className="space-y-5">
@@ -381,6 +385,104 @@ export default function SettingsManager() {
             </Field>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+/* ── Section Notifications (SMTP) ────────────────────────────────── */
+function SmtpSection({ smtp, onChange }: { smtp: any; onChange: (v: any) => void }) {
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState<{ ok: boolean; msg: string } | null>(null);
+
+  const sendTest = async () => {
+    setTesting(true);
+    setTestResult(null);
+    try {
+      const r = await api.post<any>('/api/admin/test-email');
+      setTestResult({ ok: true, msg: 'Email de test envoyé ✅ Vérifiez votre boîte de réception (et les spams).' });
+    } catch (e: any) {
+      setTestResult({ ok: false, msg: e.message || "Échec de l'envoi de test" });
+    } finally {
+      setTesting(false);
+    }
+  };
+
+  const set = (k: string, v: any) => onChange({ ...smtp, [k]: v });
+
+  return (
+    <div className="space-y-5">
+      <p className="text-sm text-neutral-500">
+        Recevez un email à chaque <strong>nouveau prospect</strong>, <strong>commande sans acompte</strong>,{' '}
+        <strong>paiement reçu</strong> et <strong>alerte fraude</strong>. Configuration SMTP
+        (Gmail, Brevo, OVH, etc.) — laissez vide pour désactiver les notifications.
+      </p>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Field label="Serveur SMTP (hôte)">
+          <input type="text" value={smtp.host || ''} placeholder="Ex : smtp.gmail.com"
+            onChange={(e) => set('host', e.target.value)} className={inputCls} />
+        </Field>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Port">
+            <input type="text" value={smtp.port || ''} placeholder="587"
+              onChange={(e) => set('port', e.target.value.replace(/[^\d]/g, ''))} className={inputCls} />
+          </Field>
+          <Field label="Sécurité">
+            <select
+              value={smtp.secure === true || (smtp.secure !== false && String(smtp.port || '587') === '465') ? '465' : '587'}
+              onChange={(e) => set('secure', e.target.value === '465')} className={inputCls}>
+              <option value="587">587 — TLS</option>
+              <option value="465">465 — SSL</option>
+            </select>
+          </Field>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Field label="Utilisateur (email du compte SMTP)">
+          <input type="text" value={smtp.user || ''} placeholder="Ex : moncompte@gmail.com"
+            onChange={(e) => set('user', e.target.value)} className={inputCls} />
+        </Field>
+        <Field label={smtp.hasPass ? 'Mot de passe SMTP (déjà configuré ✓ — laisser vide pour conserver)' : 'Mot de passe SMTP (ou « mot de passe d\'application »)'}>
+          <input type="password" value={smtp.pass || ''} placeholder={smtp.hasPass ? '•••••••• (inchangé)' : 'Mot de passe d\'application'}
+            onChange={(e) => set('pass', e.target.value)} className={inputCls} autoComplete="new-password" />
+        </Field>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Field label="Expéditeur affiché (optionnel — défaut : utilisateur)">
+          <input type="text" value={smtp.from || ''} placeholder="Ex : notifications@emroddf.com"
+            onChange={(e) => set('from', e.target.value)} className={inputCls} />
+        </Field>
+        <Field label="Destinataire des notifications (optionnel — défaut : utilisateur)">
+          <input type="text" value={smtp.to || ''} placeholder="Ex : direction@emroddf.com"
+            onChange={(e) => set('to', e.target.value)} className={inputCls} />
+        </Field>
+      </div>
+
+      <div className="bg-blue-50 border border-blue-100 rounded-sm p-4 text-[13px] text-blue-900/80 leading-relaxed">
+        <strong>💡 Exemple avec Gmail :</strong> hôte <code>smtp.gmail.com</code>, port <code>587</code>, utilisateur = votre
+        adresse Gmail, mot de passe = un <strong>mot de passe d'application</strong> (à créer sur
+        myaccount.google.com → Sécurité → Validation en deux étapes → Mots de passe d'application).
+        Pour Brevo : <code>smtp-relay.brevo.com</code>, port 587.
+      </div>
+
+      {testResult && (
+        <div className={`text-sm px-4 py-3 rounded-sm border ${testResult.ok ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-red-50 border-red-200 text-red-700'}`}>
+          {testResult.msg}
+        </div>
+      )}
+
+      <div className="flex flex-wrap items-center gap-3 pt-1">
+        <button type="button" onClick={sendTest} disabled={testing}
+          className="flex items-center gap-2 px-4 py-2.5 text-sm border border-neutral-200 rounded-sm hover:border-[#154c30] hover:text-[#154c30] transition disabled:opacity-50">
+          {testing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+          Envoyer un email de test
+        </button>
+        <span className="text-xs text-neutral-400">
+          Pensez à « Enregistrer » la configuration avant le test.
+        </span>
       </div>
     </div>
   );

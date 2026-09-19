@@ -6,6 +6,7 @@
 // ══════════════════════════════════════════════════════════════════
 import crypto from 'crypto';
 import { db } from '../_lib/db';
+import { sendNotification } from '../_lib/mailer';
 
 // Désactive le parseur par défaut de Vercel pour lire le flux brut
 // (indispensable : la signature HMAC doit porter sur le corps exact)
@@ -99,8 +100,25 @@ export default async function handler(req: any, res: any) {
             metadata = jsonb_set(COALESCE(metadata, '{}'::jsonb), '{fraudAlert}', 'true'::jsonb)
           WHERE id = ${order.id}
         `;
+        // Notification email d'alerte (ne bloque jamais le flux)
+        sendNotification(
+          `🚨 ALERTE FRAUDE — commande ${reference}`,
+          [
+            ['Référence', String(reference)],
+            ['Montant payé', `${new Intl.NumberFormat('fr-FR').format(actualPaid)} GNF`],
+            ['Acompte attendu', `${new Intl.NumberFormat('fr-FR').format(order.deposit_amount)} GNF`],
+            ['Écart', `${new Intl.NumberFormat('fr-FR').format(order.deposit_amount - actualPaid)} GNF`],
+            ['Statut', 'Commande marquée ÉCHOUÉE — à vérifier avant production'],
+          ],
+          { label: 'Examiner la commande', url: `${process.env.VITE_PUBLIC_URL || ''}/admin/commandes` }
+        ).catch(() => {});
         return res.status(200).json({ success: true });
       }
+
+      // Détails client pour la notification (source fiable : la base)
+      const [orderInfo] = await sql`
+        SELECT o.product_name, o.customer_name, o.customer_phone FROM orders o WHERE o.id = ${order.id}
+      `;
 
       await sql`
         UPDATE orders
@@ -109,6 +127,19 @@ export default async function handler(req: any, res: any) {
         WHERE id = ${order.id}
       `;
       console.log(`✅ Commande ${reference} marquée PAYÉE (${actualPaid} GNF).`);
+
+      // Notification email de paiement reçu (ne bloque jamais le flux)
+      sendNotification(
+        `💰 Acompte reçu — ${reference}`,
+        [
+          ['Référence', String(reference)],
+          ['Produit', orderInfo?.product_name || '—'],
+          ['Montant encaissé', `${new Intl.NumberFormat('fr-FR').format(actualPaid)} GNF`],
+          ['Client', orderInfo?.customer_name || '—'],
+          ['Téléphone', orderInfo?.customer_phone || '—'],
+        ],
+        { label: 'Voir la commande', url: `${process.env.VITE_PUBLIC_URL || ''}/admin/commandes` }
+      ).catch(() => {});
     } else if (eventType === 'payment.failed' || eventType === 'payment.cancelled') {
       await sql`
         UPDATE orders SET payment_status = ${eventType === 'payment.failed' ? 'failed' : 'cancelled'}

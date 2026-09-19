@@ -75,6 +75,8 @@ async function main() {
   const paymentCreateH = (await import('../api/payment/create')).default;
   const webhookH = (await import('../api/payment/webhook')).default;
   const publicOrdersH = (await import('../api/public/orders')).default;
+  const passwordH = (await import('../api/admin/password')).default;
+  const testEmailH = (await import('../api/admin/test-email')).default;
   const { computeDeposit } = await import('../api/_lib/deposit');
   const { neon } = await import('@neondatabase/serverless');
   const sql = neon(process.env.DATABASE_URL!) as any;
@@ -414,7 +416,61 @@ async function main() {
     const [promotedSub] = await sql`SELECT parent_id FROM categories WHERE id = ${subId}`;
     check('suppression section → sous-section promue en section', res.statusCode === 200 && promotedSub.parent_id === null);
 
-    /* ══ 12. DÉCONNEXION ══════════════════════════════════════════ */
+    /* ══ 12. NOTIFICATIONS SMTP + MOT DE PASSE ═══════════════════ */
+    console.log('\n══ 12. NOTIFICATIONS SMTP + MOT DE PASSE ══');
+
+    // ── 12a. Email de test sans configuration → réponse gracieuse ─
+    res = await call(testEmailH, mockReq({ method: 'POST', headers: authHeaders }));
+    check('email de test sans SMTP → 400 gracieux (sent:false)', res.statusCode === 400 && res.body.sent === false);
+
+    // ── 12b. Configuration SMTP : masquage et exclusions ─────────
+    res = await call(settingsAdminH, mockReq({ method: 'PUT', headers: authHeaders, body: {
+      key: 'smtp', value: { host: 'smtp.test.local', port: 587, secure: false, user: 'test@emroddf.com', pass: 'MOT-DE-PASSE-SECRET', to: 'direction@emroddf.com' },
+    } }));
+    check('sauvegarde config SMTP', res.statusCode === 200 && res.body.value.hasPass === true && res.body.value.pass === '');
+
+    res = await call(settingsAdminH, mockReq({ method: 'GET', headers: authHeaders }));
+    check('settings ADMIN : mot de passe SMTP masqué + hasPass', res.body.smtp?.pass === '' && res.body.smtp?.hasPass === true);
+    check('settings ADMIN : adminPassword jamais exposé', !('adminPassword' in res.body));
+
+    res = await call(settingsPublicH, mockReq({}));
+    check('settings PUBLIC : smtp JAMAIS exposé', !('smtp' in res.body));
+    check('settings PUBLIC : adminPassword JAMAIS exposé', !('adminPassword' in res.body));
+
+    // Un mot de passe SMTP vide conserve le secret en base
+    res = await call(settingsAdminH, mockReq({ method: 'PUT', headers: authHeaders, body: {
+      key: 'smtp', value: { host: 'smtp.nouveau.local', port: 465, secure: true, user: 'test2@emroddf.com', pass: '' },
+    } }));
+    const [smtpRow] = await sql`SELECT value FROM settings WHERE key='smtp'`;
+    check('mot de passe SMTP vide → secret conservé en base', smtpRow?.value?.pass === 'MOT-DE-PASSE-SECRET' && smtpRow?.value?.host === 'smtp.nouveau.local');
+
+    // ── 12c. Changement de mot de passe (flux complet) ────────────
+    res = await call(passwordH, mockReq({ method: 'PUT', headers: authHeaders, body: { currentPassword: 'MAUVAIS', newPassword: 'NouveauMdp123!' } }));
+    check('changement mdp : actuel incorrect → 401', res.statusCode === 401);
+    res = await call(passwordH, mockReq({ method: 'PUT', headers: authHeaders, body: { currentPassword: process.env.ADMIN_PASSWORD!.trim(), newPassword: 'court' } }));
+    check('changement mdp : nouveau trop court → 400', res.statusCode === 400);
+
+    res = await call(passwordH, mockReq({ method: 'PUT', headers: authHeaders, body: { currentPassword: process.env.ADMIN_PASSWORD!.trim(), newPassword: 'NouveauMdp123!' } }));
+    check('changement mdp : succès', res.statusCode === 200 && res.body.success === true);
+
+    res = await call(login, mockReq({ method: 'POST', body: { email: process.env.ADMIN_EMAIL!.trim(), password: process.env.ADMIN_PASSWORD!.trim() } }));
+    check('ancien mot de passe → 401 après changement', res.statusCode === 401);
+    res = await call(login, mockReq({ method: 'POST', body: { email: process.env.ADMIN_EMAIL!.trim(), password: 'NouveauMdp123!' } }));
+    check('nouveau mot de passe → 200', res.statusCode === 200);
+    // La session ouverte reste valide (jeton indépendant du mot de passe)
+    res = await call(session, mockReq({ headers: authHeaders }));
+    check('session existante toujours valide après changement', res.statusCode === 200);
+
+    // Le mot de passe est stocké haché (jamais en clair)
+    const [pwRow] = await sql`SELECT value FROM settings WHERE key='adminPassword'`;
+    check('mot de passe stocké haché (scrypt, pas en clair)', !!pwRow?.value?.salt && !!pwRow?.value?.hash && !JSON.stringify(pwRow.value).includes('NouveauMdp123!'));
+
+    // Retour au mot de passe d'environnement pour la suite
+    await sql`DELETE FROM settings WHERE key='adminPassword'`;
+    res = await call(login, mockReq({ method: 'POST', body: { email: process.env.ADMIN_EMAIL!.trim(), password: process.env.ADMIN_PASSWORD!.trim() } }));
+    check('retour au mot de passe env après suppression', res.statusCode === 200);
+
+    /* ══ 13. DÉCONNEXION ══════════════════════════════════════════ */
     console.log('\n══ 11. DÉCONNEXION ══');
     res = await call(logout, mockReq({ method: 'POST', headers: authHeaders }));
     check('logout → cookie effacé', res.statusCode === 200 && res.cookies.some((c: string) => c.includes('Max-Age=0')));
@@ -428,6 +484,8 @@ async function main() {
     if (created.gal.length) await sql`DELETE FROM gallery_items WHERE id = ANY(${created.gal})`;
     if (created.prods.length) await sql`DELETE FROM products WHERE id = ANY(${created.prods})`;
     if (created.cats.length) await sql`DELETE FROM categories WHERE id = ANY(${created.cats})`;
+    // Nettoyage des paramètres sensibles créés par les tests
+    await sql`DELETE FROM settings WHERE key IN ('smtp', 'adminPassword')`;
     const [{ n: prods }] = await sql`SELECT COUNT(*)::int AS n FROM products`;
     const [{ n: leads }] = await sql`SELECT COUNT(*)::int AS n FROM leads`;
     const [{ n: orders }] = await sql`SELECT COUNT(*)::int AS n FROM orders`;
