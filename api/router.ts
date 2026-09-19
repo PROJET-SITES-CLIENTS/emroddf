@@ -8,8 +8,6 @@
 // ══════════════════════════════════════════════════════════════════
 import type { IncomingMessage, ServerResponse } from 'http';
 
-// Corps brut préservé pour la vérification HMAC du webhook
-export const config = { api: { bodyParser: false } };
 
 import login from './_routes/admin/login';
 import logout from './_routes/admin/logout';
