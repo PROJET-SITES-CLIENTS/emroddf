@@ -1603,7 +1603,8 @@ async function handler(req: any, res: any) {
     const rows = await sql`
       SELECT id, reference, product_id, product_name, price_total, deposit_amount,
              paid_amount, customer_name, customer_phone, customer_address,
-             payment_status, djomy_transaction_id, created_at, paid_at
+             payment_status, djomy_transaction_id, created_at, paid_at,
+             product_details, metadata
       FROM orders
       WHERE (${validStatus}::text IS NULL OR payment_status = ${validStatus})
       ORDER BY created_at DESC
@@ -1679,7 +1680,7 @@ export const catalogue = (() => {
 
 async function handler(req: any, res: any) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
-  res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+  res.setHeader('Cache-Control', 'no-store');
 
   try {
     const sql = db();
@@ -1763,7 +1764,7 @@ export const productPublic = (() => {
 
 async function handler(req: any, res: any) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
-  res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+  res.setHeader('Cache-Control', 'no-store');
 
   const { categorySlug, modelSlug } = req.query;
 
@@ -1832,7 +1833,7 @@ export const galleryPublic = (() => {
 
 async function handler(req: any, res: any) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
-  res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+  res.setHeader('Cache-Control', 'no-store');
 
   try {
     const sql = db();
@@ -1868,7 +1869,7 @@ const SENSITIVE_KEYS = ['smtp', 'adminPassword'];
 
 async function handler(req: any, res: any) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
-  res.setHeader('Cache-Control', 'public, s-maxage=120, stale-while-revalidate=600');
+  res.setHeader('Cache-Control', 'no-store');
 
   try {
     let stored: Record<string, any> = {};
@@ -2016,8 +2017,12 @@ async function handler(req: any, res: any) {
     // 🔒 Seuls les produits avec paiement désactivé peuvent être
     // commandés par cette voie (impossible de contourner l'acompte)
     const [product] = await sql`
-      SELECT id, name, price FROM products
-      WHERE id = ${productId} AND is_published AND deposit_mode = 'none'
+      SELECT p.id, p.name, p.price, p.description, p.dimensions, p.finition, p.essence,
+             (SELECT pi.url FROM product_images pi
+               WHERE pi.product_id = p.id AND pi.media_type = 'image'
+               ORDER BY pi.is_main DESC, pi.position, pi.id LIMIT 1) AS main_image_url
+      FROM products p
+      WHERE p.id = ${productId} AND p.is_published AND p.deposit_mode = 'none'
       LIMIT 1
     `;
     if (!product) {
@@ -2025,12 +2030,25 @@ async function handler(req: any, res: any) {
     }
 
     const reference = `EMROD-${Date.now()}`;
+    // Snapshot des détails du produit tels que vus par le client
+    const productDetails = {
+      nom: product.name,
+      description: product.description || '',
+      dimensions: product.dimensions || '',
+      finition: product.finition || '',
+      essence: product.essence || '',
+      imageUrl: product.main_image_url || null,
+      acompteMode: 'none',
+      acompteValeur: 0,
+      prixTotal: Number(product.price) || 0,
+    };
     await sql`
       INSERT INTO orders (reference, product_id, product_name, price_total, deposit_amount,
-                          customer_name, customer_phone, customer_address, payment_status, metadata)
+                          customer_name, customer_phone, customer_address, payment_status, metadata, product_details)
       VALUES (${reference}, ${product.id}, ${product.name}, ${Number(product.price) || 0}, 0,
               ${`${nom} ${prenom}`.trim()}, ${telephone}, ${adresse}, 'pending',
-              ${JSON.stringify({ noDeposit: true, mode: 'none' })}::jsonb)
+              ${JSON.stringify({ noDeposit: true, mode: 'none' })}::jsonb,
+              ${JSON.stringify(productDetails)}::jsonb)
     `;
 
     // Notification email (ne bloque jamais le flux principal)
@@ -2124,8 +2142,13 @@ async function handler(req: any, res: any) {
     // ── 1. Produit + prix AUTHENTIQUE depuis la base ───────────────
     const sql = db();
     const [product] = await sql`
-      SELECT id, name, price, deposit_mode, deposit_value FROM products
-      WHERE id = ${Number(productId)} AND is_published
+      SELECT p.id, p.name, p.price, p.description, p.dimensions, p.finition,
+             p.essence, p.deposit_mode, p.deposit_value,
+             (SELECT pi.url FROM product_images pi
+               WHERE pi.product_id = p.id AND pi.media_type = 'image'
+               ORDER BY pi.is_main DESC, pi.position, pi.id LIMIT 1) AS main_image_url
+      FROM products p
+      WHERE p.id = ${Number(productId)} AND p.is_published
       LIMIT 1
     `;
     if (!product) {
@@ -2149,11 +2172,24 @@ async function handler(req: any, res: any) {
 
     // ── 3. Création de la commande en base (pending) ───────────────
     const reference = `EMROD-${Date.now()}`;
+    // Snapshot des détails du produit tels que vus par le client
+    const productDetails = {
+      nom: product.name,
+      description: product.description || '',
+      dimensions: product.dimensions || '',
+      finition: product.finition || '',
+      essence: product.essence || '',
+      imageUrl: product.main_image_url || null,
+      acompteMode: product.deposit_mode,
+      acompteValeur: Number(product.deposit_value),
+      prixTotal: priceTotal,
+    };
     const [order] = await sql`
       INSERT INTO orders (reference, product_id, product_name, price_total, deposit_amount,
-                          customer_name, customer_phone, customer_address, payment_status)
+                          customer_name, customer_phone, customer_address, payment_status, product_details)
       VALUES (${reference}, ${product.id}, ${product.name}, ${priceTotal}, ${acompteCalcule},
-              ${`${nom} ${prenom}`.trim()}, ${telephone}, ${adresse}, 'pending')
+              ${`${nom} ${prenom}`.trim()}, ${telephone}, ${adresse}, 'pending',
+              ${JSON.stringify(productDetails)}::jsonb)
       RETURNING id, reference
     `;
 

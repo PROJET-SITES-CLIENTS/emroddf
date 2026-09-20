@@ -33,8 +33,12 @@ export default async function handler(req: any, res: any) {
     // 🔒 Seuls les produits avec paiement désactivé peuvent être
     // commandés par cette voie (impossible de contourner l'acompte)
     const [product] = await sql`
-      SELECT id, name, price FROM products
-      WHERE id = ${productId} AND is_published AND deposit_mode = 'none'
+      SELECT p.id, p.name, p.price, p.description, p.dimensions, p.finition, p.essence,
+             (SELECT pi.url FROM product_images pi
+               WHERE pi.product_id = p.id AND pi.media_type = 'image'
+               ORDER BY pi.is_main DESC, pi.position, pi.id LIMIT 1) AS main_image_url
+      FROM products p
+      WHERE p.id = ${productId} AND p.is_published AND p.deposit_mode = 'none'
       LIMIT 1
     `;
     if (!product) {
@@ -42,12 +46,25 @@ export default async function handler(req: any, res: any) {
     }
 
     const reference = `EMROD-${Date.now()}`;
+    // Snapshot des détails du produit tels que vus par le client
+    const productDetails = {
+      nom: product.name,
+      description: product.description || '',
+      dimensions: product.dimensions || '',
+      finition: product.finition || '',
+      essence: product.essence || '',
+      imageUrl: product.main_image_url || null,
+      acompteMode: 'none',
+      acompteValeur: 0,
+      prixTotal: Number(product.price) || 0,
+    };
     await sql`
       INSERT INTO orders (reference, product_id, product_name, price_total, deposit_amount,
-                          customer_name, customer_phone, customer_address, payment_status, metadata)
+                          customer_name, customer_phone, customer_address, payment_status, metadata, product_details)
       VALUES (${reference}, ${product.id}, ${product.name}, ${Number(product.price) || 0}, 0,
               ${`${nom} ${prenom}`.trim()}, ${telephone}, ${adresse}, 'pending',
-              ${JSON.stringify({ noDeposit: true, mode: 'none' })}::jsonb)
+              ${JSON.stringify({ noDeposit: true, mode: 'none' })}::jsonb,
+              ${JSON.stringify(productDetails)}::jsonb)
     `;
 
     // Notification email (ne bloque jamais le flux principal)

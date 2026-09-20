@@ -121,7 +121,9 @@ export function computeDeposit(
 }
 
 async function getJson<T>(url: string): Promise<T> {
-  const res = await fetch(url);
+  // no-store : les modifications faites dans le tableau de bord doivent
+  // être visibles immédiatement sur le site (jamais de cache navigateur)
+  const res = await fetch(url, { cache: 'no-store' });
   if (!res.ok) throw new Error(`API Error ${res.status}: ${url}`);
   return res.json() as Promise<T>;
 }

@@ -10,7 +10,7 @@ const SENSITIVE_KEYS = ['smtp', 'adminPassword'];
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
-  res.setHeader('Cache-Control', 'public, s-maxage=120, stale-while-revalidate=600');
+  res.setHeader('Cache-Control', 'no-store');
 
   try {
     let stored: Record<string, any> = {};

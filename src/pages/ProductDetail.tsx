@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useParams, Link } from "react-router-dom";
 import OrderModal from "../components/OrderModal";
+import CustomizeModal from "../components/CustomizeModal";
 import { fetchProductDetail, isVideoFile, computeDeposit } from "../lib/api";
 import heroBg from "../assets/images/hero-bg.jpg";
 
@@ -51,6 +52,7 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [orderOpen, setOrderOpen] = useState(false);
+  const [customizeOpen, setCustomizeOpen] = useState(false);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -347,12 +349,12 @@ export default function ProductDetail() {
               </motion.button>
               
               <div className="grid grid-cols-2 gap-4">
-                <Link
-                  to="/contact"
+                <button
+                  onClick={() => setCustomizeOpen(true)}
                   className="w-full flex items-center justify-center text-center text-accent uppercase tracking-[0.2em] text-[10px] font-medium py-3.5 border border-accent/20 hover:border-accent hover:bg-accent/5 transition-colors rounded-sm"
                 >
                   Modifier sur-mesure
-                </Link>
+                </button>
                 <button
                   onClick={handleCopyLink}
                   className="w-full flex items-center justify-center gap-2 text-foreground/70 uppercase tracking-[0.2em] text-[10px] font-medium py-3.5 border border-border/50 hover:border-foreground/30 hover:bg-secondary/30 transition-colors rounded-sm"
@@ -394,6 +396,19 @@ export default function ProductDetail() {
         prixNumeric={displayPrixNumeric}
         depositMode={product.depositMode}
         depositValue={product.depositValue}
+      />
+
+      {/* Customize Modal (personnalisation sur-mesure du modèle) */}
+      <CustomizeModal
+        isOpen={customizeOpen}
+        onClose={() => setCustomizeOpen(false)}
+        product={{
+          name: product.name,
+          prix: displayPrix,
+          dimensions: displayDimensions !== "Sur-mesure" ? displayDimensions : "",
+          essence: displayEssence !== "Bois massif" ? displayEssence : "",
+          finition: displayFinition !== "Premium" ? displayFinition : "",
+        }}
       />
 
       {/* Lightbox */}

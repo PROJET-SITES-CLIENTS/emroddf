@@ -16,7 +16,8 @@ export default async function handler(req: any, res: any) {
     const rows = await sql`
       SELECT id, reference, product_id, product_name, price_total, deposit_amount,
              paid_amount, customer_name, customer_phone, customer_address,
-             payment_status, djomy_transaction_id, created_at, paid_at
+             payment_status, djomy_transaction_id, created_at, paid_at,
+             product_details, metadata
       FROM orders
       WHERE (${validStatus}::text IS NULL OR payment_status = ${validStatus})
       ORDER BY created_at DESC

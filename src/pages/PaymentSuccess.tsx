@@ -1,8 +1,9 @@
 import { useEffect } from "react";
 import { CheckCircle, MessageCircle, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { fetchSettings } from "../lib/api";
 
-const WHATSAPP_NUMBER = "224623885959"; // Numéro WhatsApp EMROD SARL
+const WHATSAPP_FALLBACK = "224623885959";
 
 export default function PaymentSuccess() {
   const navigate = useNavigate();
@@ -10,10 +11,16 @@ export default function PaymentSuccess() {
   useEffect(() => {
     // Récupérer le message WhatsApp préparé avant le paiement
     const waMessage = localStorage.getItem("emrod_last_order_wa");
-    
-    const timer = setTimeout(() => {
+
+    const timer = setTimeout(async () => {
       if (waMessage) {
-        const waLink = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(waMessage)}`;
+        // Numéro WhatsApp piloté par Paramètres → Contact
+        let waNumber = WHATSAPP_FALLBACK;
+        try {
+          const s = await fetchSettings();
+          waNumber = s.contact?.whatsapp || WHATSAPP_FALLBACK;
+        } catch { /* repli */ }
+        const waLink = `https://wa.me/${waNumber}?text=${encodeURIComponent(waMessage)}`;
         // Nettoyage
         localStorage.removeItem("emrod_last_order_wa");
         // Ouverture de WhatsApp

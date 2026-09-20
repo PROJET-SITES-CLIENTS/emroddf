@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { X, ArrowRight, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import popupBg from "../assets/images/popup-bg.jpg";
-import { submitLead } from "../lib/api";
+import { submitLead, fetchSettings } from "../lib/api";
 
 export default function LeadPopup() {
   const [isOpen, setIsOpen] = useState(false);
@@ -54,7 +54,10 @@ export default function LeadPopup() {
       const honeypot = (document.getElementById("popup-website") as HTMLInputElement)?.value || "";
       await submitLead({ ...formData, source: "popup", website: honeypot });
       const messageText = `Bonjour EMROD, je suis ${formData.firstName}. J'aimerais des informations pour : ${formData.serviceType}. Mon numéro est le ${formData.phone}.`;
-      const waLink = `https://wa.me/224623885959?text=${encodeURIComponent(messageText)}`;
+      // Numéro WhatsApp piloté par Paramètres → Contact
+      let waNumber = "224623885959";
+      try { const s = await fetchSettings(); waNumber = s.contact?.whatsapp || waNumber; } catch { /* repli */ }
+      const waLink = `https://wa.me/${waNumber}?text=${encodeURIComponent(messageText)}`;
 
       window.open(waLink, "_blank");
 

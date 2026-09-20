@@ -11,6 +11,52 @@ function isVideoFile(url: string): boolean {
   return /\.(mp4|webm|mov)(\?|$)/i.test(url) || url.includes('.blob.');
 }
 
+// Aperçu (poster) d'une vidéo externe : miniature YouTube ou Drive si dérivable
+export function videoPoster(url: string): string | null {
+  const yt = url.match(/youtube\.com\/embed\/([\w-]{6,})/);
+  if (yt) return `https://i.ytimg.com/vi/${yt[1]}/hqdefault.jpg`;
+  const drive = url.match(/drive\.google\.com\/file\/d\/([\w-]+)/);
+  if (drive) return `https://drive.google.com/thumbnail?id=${drive[1]}&sz=w800`;
+  return null;
+}
+
+/* Carte d'aperçu pour une vidéo externe : poster (si disponible) avec
+   repli sur une carte dégradée élégante + bouton lecture */
+function ExternalVideoCard({ url, title }: { url: string; title: string }) {
+  const poster = videoPoster(url);
+  return (
+    <div className="relative w-full aspect-[4/3] group/vid">
+      {/* Fond dégradé élégant (toujours présent sous le poster) */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-3"
+           style={{ background: "linear-gradient(135deg, #0d3320 0%, #11522f 55%, #154c30 100%)" }}>
+        <div className="absolute inset-0 opacity-[0.07]" style={{ background: "radial-gradient(circle at 70% 20%, #e85d04, transparent 60%)" }} />
+        <div className="w-16 h-16 rounded-full flex items-center justify-center border border-white/25 bg-white/10 backdrop-blur-sm group-hover/vid:bg-[#e85d04] group-hover/vid:border-[#e85d04] transition-colors duration-300">
+          <span className="text-white text-xl ml-1">▶</span>
+        </div>
+        <span className="text-white/70 text-[10px] uppercase tracking-[0.25em] font-medium">Vidéo</span>
+      </div>
+      {/* Poster par-dessus (masqué si indisponible) */}
+      {poster && (
+        <img
+          src={poster}
+          alt={title || "Vidéo"}
+          loading="lazy"
+          className="absolute inset-0 w-full h-full object-cover"
+          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+        />
+      )}
+      {/* Voile + titre au survol */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover/vid:opacity-100 transition-opacity duration-300 flex items-end p-4">
+        <span className="text-white text-sm font-medium line-clamp-2">{title || "Voir la vidéo"}</span>
+      </div>
+      {/* Badge durée/play permanent */}
+      <span className="absolute bottom-3 right-3 text-[9px] font-bold uppercase tracking-wider text-white px-2 py-1 rounded-sm bg-black/60 backdrop-blur-sm border border-white/10">
+        ▶ Vidéo
+      </span>
+    </div>
+  );
+}
+
 export default function Gallery() {
   const [activeTab, setActiveTab] = useState<'images' | 'videos'>('images');
   const [images, setImages] = useState<GalleryMedia[]>([]);
@@ -190,13 +236,8 @@ export default function Gallery() {
                     className="w-full h-auto max-h-[70vh] object-cover group-hover:scale-110 transition-transform duration-1000 ease-[0.25,0.46,0.45,0.94]"
                   />
                 ) : img.media_type === 'video' ? (
-                  /* Vidéo externe (embed) : vignette générique cliquable */
-                  <div className="w-full aspect-video flex flex-col items-center justify-center gap-3 bg-secondary/60 group-hover:bg-secondary transition-colors">
-                    <div className="w-16 h-16 rounded-sm flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #154c30, #11522f)' }}>
-                      <span className="text-white text-2xl">▶</span>
-                    </div>
-                    <span className="text-xs uppercase tracking-[0.2em] text-foreground/40">{img.title || "Vidéo"}</span>
-                  </div>
+                  /* Vidéo externe : carte d'aperçu élégante (poster si disponible) */
+                  <ExternalVideoCard url={img.url} title={img.title} />
                 ) : (
                   <img
                     src={img.url}

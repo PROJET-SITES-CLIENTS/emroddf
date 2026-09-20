@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, ShoppingBag, MessageCircle, CheckCircle, Loader2, Sparkles } from "lucide-react";
-import { computeDeposit, submitNoDepositOrder, type DepositMode } from "../lib/api";
+import { computeDeposit, submitNoDepositOrder, fetchSettings, type DepositMode } from "../lib/api";
 
 interface OrderModalProps {
   isOpen: boolean;
@@ -14,7 +14,17 @@ interface OrderModalProps {
   depositValue?: number;
 }
 
-const WHATSAPP_NUMBER = "224623885959"; // Numéro WhatsApp EMROD SARL
+const WHATSAPP_FALLBACK = "224623885959"; // repli si les paramètres sont injoignables
+
+/** Numéro WhatsApp piloté par Paramètres → Contact */
+async function getWhatsAppNumber(): Promise<string> {
+  try {
+    const s = await fetchSettings();
+    return s.contact?.whatsapp || WHATSAPP_FALLBACK;
+  } catch {
+    return WHATSAPP_FALLBACK;
+  }
+}
 
 function formatPrice(num: number): string {
   if (!num) return "Prix sur demande";
@@ -151,8 +161,9 @@ export default function OrderModal({
 
         const waMessage = `Bonjour EMROD SARL ! 🪑\n\nJe viens de passer commande sur votre site.\n\n📋 *MA COMMANDE*\nProduit : ${produit}\nPrix total : ${prix}\n\n👤 *MES COORDONNÉES*\nNom & Prénom : ${formData.nom} ${formData.prenom}\nTéléphone : ${formData.telephone}\nAdresse de livraison : ${formData.adresse}\n\nJe souhaite finaliser ma commande ! 🙏`;
         setStep("success");
+        const waNumber = await getWhatsAppNumber();
         setTimeout(() => {
-          window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(waMessage)}`, "_blank");
+          window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(waMessage)}`, "_blank");
         }, 1200);
       }
     } catch (err: any) {

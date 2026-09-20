@@ -64,8 +64,13 @@ export default async function handler(req: any, res: any) {
     // ── 1. Produit + prix AUTHENTIQUE depuis la base ───────────────
     const sql = db();
     const [product] = await sql`
-      SELECT id, name, price, deposit_mode, deposit_value FROM products
-      WHERE id = ${Number(productId)} AND is_published
+      SELECT p.id, p.name, p.price, p.description, p.dimensions, p.finition,
+             p.essence, p.deposit_mode, p.deposit_value,
+             (SELECT pi.url FROM product_images pi
+               WHERE pi.product_id = p.id AND pi.media_type = 'image'
+               ORDER BY pi.is_main DESC, pi.position, pi.id LIMIT 1) AS main_image_url
+      FROM products p
+      WHERE p.id = ${Number(productId)} AND p.is_published
       LIMIT 1
     `;
     if (!product) {
@@ -89,11 +94,24 @@ export default async function handler(req: any, res: any) {
 
     // ── 3. Création de la commande en base (pending) ───────────────
     const reference = `EMROD-${Date.now()}`;
+    // Snapshot des détails du produit tels que vus par le client
+    const productDetails = {
+      nom: product.name,
+      description: product.description || '',
+      dimensions: product.dimensions || '',
+      finition: product.finition || '',
+      essence: product.essence || '',
+      imageUrl: product.main_image_url || null,
+      acompteMode: product.deposit_mode,
+      acompteValeur: Number(product.deposit_value),
+      prixTotal: priceTotal,
+    };
     const [order] = await sql`
       INSERT INTO orders (reference, product_id, product_name, price_total, deposit_amount,
-                          customer_name, customer_phone, customer_address, payment_status)
+                          customer_name, customer_phone, customer_address, payment_status, product_details)
       VALUES (${reference}, ${product.id}, ${product.name}, ${priceTotal}, ${acompteCalcule},
-              ${`${nom} ${prenom}`.trim()}, ${telephone}, ${adresse}, 'pending')
+              ${`${nom} ${prenom}`.trim()}, ${telephone}, ${adresse}, 'pending',
+              ${JSON.stringify(productDetails)}::jsonb)
       RETURNING id, reference
     `;
 

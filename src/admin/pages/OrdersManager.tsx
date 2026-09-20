@@ -2,7 +2,7 @@
 // Commandes — suivi des commandes et paiements Djomy + export CSV
 // ══════════════════════════════════════════════════════════════════
 import { useEffect, useState, useCallback } from 'react';
-import { Download, X, MapPin, Phone, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Download, X, MapPin, Phone, RefreshCw, AlertTriangle, Package } from 'lucide-react';
 import { api, formatGNF, formatDate } from '../../lib/adminApi';
 
 interface Order {
@@ -11,6 +11,12 @@ interface Order {
   customer_name: string; customer_phone: string; customer_address: string;
   payment_status: 'pending' | 'paid' | 'cancelled' | 'failed' | 'refunded';
   djomy_transaction_id: string; created_at: string; paid_at: string | null;
+  product_details?: {
+    nom?: string; description?: string; dimensions?: string; finition?: string;
+    essence?: string; imageUrl?: string | null; acompteMode?: string;
+    acompteValeur?: number; prixTotal?: number;
+  } | null;
+  metadata?: any;
 }
 
 const STATUS_CONFIG: Record<string, { label: string; cls: string }> = {
@@ -156,7 +162,14 @@ export default function OrdersManager() {
               {[
                 ['Produit', selected.product_name],
                 ['Prix total', formatGNF(selected.price_total)],
-                ['Acompte attendu (60%)', formatGNF(selected.deposit_amount)],
+                [
+                  selected.product_details?.acompteMode === 'none'
+                    ? 'Acompte'
+                    : selected.product_details?.acompteMode === 'fixed'
+                      ? `Acompte (fixe : ${formatGNF(selected.product_details.acompteValeur || 0)})`
+                      : `Acompte (${selected.product_details?.acompteValeur ?? 60}%)`,
+                  selected.product_details?.acompteMode === 'none' ? 'Sans acompte en ligne' : formatGNF(selected.deposit_amount),
+                ],
                 ['Montant encaissé', formatGNF(selected.paid_amount)],
                 ['Transaction Djomy', selected.djomy_transaction_id || '—'],
                 ['Payée le', selected.paid_at ? formatDate(selected.paid_at) : '—'],
@@ -167,6 +180,40 @@ export default function OrdersManager() {
                 </div>
               ))}
             </div>
+
+            {/* Détails du produit sélectionné par le client (snapshot au moment de la commande) */}
+            {selected.product_details && (
+              <div className="bg-white border border-neutral-200 rounded-sm p-4 mb-5">
+                <div className="text-xs uppercase tracking-wider text-neutral-400 mb-3 flex items-center gap-2">
+                  <Package className="w-3.5 h-3.5" /> Détails du produit commandé
+                </div>
+                <div className="flex gap-4">
+                  {selected.product_details.imageUrl && (
+                    <div className="w-24 h-24 rounded-sm overflow-hidden bg-neutral-100 shrink-0">
+                      <img src={selected.product_details.imageUrl} alt={selected.product_details.nom || ''} className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <div className="font-heading text-lg text-[#154c30] mb-1">{selected.product_details.nom || selected.product_name}</div>
+                    <div className="grid grid-cols-3 gap-2 mb-2">
+                      {[
+                        ['Dimensions', selected.product_details.dimensions],
+                        ['Finition', selected.product_details.finition],
+                        ['Essence', selected.product_details.essence],
+                      ].map(([label, val]) => (
+                        <div key={label} className="bg-neutral-50 rounded-sm px-2 py-1.5">
+                          <div className="text-[9px] uppercase tracking-wider text-neutral-400">{label}</div>
+                          <div className="text-xs font-medium text-neutral-700 truncate" title={String(val || '')}>{val || '—'}</div>
+                        </div>
+                      ))}
+                    </div>
+                    {selected.product_details.description && (
+                      <p className="text-xs text-neutral-500 leading-relaxed line-clamp-4">{selected.product_details.description}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Client */}
             <div className="bg-neutral-50 rounded-sm p-4 mb-5 space-y-2 text-sm">

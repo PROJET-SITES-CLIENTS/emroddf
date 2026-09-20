@@ -84,6 +84,7 @@ CREATE TABLE IF NOT EXISTS orders (
                      CHECK (payment_status IN ('pending', 'paid', 'cancelled', 'failed', 'refunded')),
   djomy_transaction_id TEXT NOT NULL DEFAULT '',
   metadata           JSONB,
+  product_details    JSONB,                    -- Snapshot du produit au moment de la commande
   created_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
   paid_at            TIMESTAMPTZ
 );
@@ -120,3 +121,6 @@ DO $$ BEGIN
   ALTER TABLE product_images ADD CONSTRAINT chk_product_images_media_type
     CHECK (media_type IN ('image', 'video'));
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+-- Snapshot des détails du produit au moment de la commande (dashboard)
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS product_details JSONB;
