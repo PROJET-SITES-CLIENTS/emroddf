@@ -259,7 +259,7 @@ export default function Home() {
         "Vous êtes au centre de chaque création. Nous sélectionnons soigneusement chaque pièce de bois pour concevoir avec vous des meubles robustes, esthétiques et parfaitement adaptés à votre style de vie.",
         "Chaque pièce est le fruit d'un travail manuel minutieux, pensée pour dépasser vos attentes et magnifier votre intérieur.",
       ];
-  const DEFAULT_REALISATIONS = ["IMG-20260531-WA0035.jpg", "IMG-20260531-WA0079.jpg", "IMG-20260531-WA0040.jpg", "IMG-20260531-WA0051.jpg", "IMG-20260531-WA0042.jpg", "IMG-20260531-WA0088.jpg", "IMG-20260531-WA0038.jpg", "IMG-20260524-WA0011.jpg", "IMG-20260531-WA0062.jpg"];
+  const DEFAULT_REALISATIONS = ["IMG-20260531-WA0035.jpg", "IMG-20260531-WA0079.jpg", "IMG-20260531-WA0040.jpg", "IMG-20260531-WA0051.jpg", "IMG-20260531-WA0042.jpg", "IMG-20260531-WA0086.jpg", "IMG-20260531-WA0038.jpg", "IMG-20260524-WA0011.jpg", "IMG-20260531-WA0062.jpg"];
   const realisations = (settings?.home?.realisations?.length ? settings.home.realisations : DEFAULT_REALISATIONS.map((f) => `/gallery/${f}`));
   const testimonials = settings?.testimonials?.length ? settings.testimonials : FALLBACK_TESTIMONIALS;
 

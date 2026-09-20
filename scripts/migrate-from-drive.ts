@@ -16,6 +16,8 @@
 // Prérequis : DATABASE_URL + BLOB_READ_WRITE_TOKEN dans .env
 // ══════════════════════════════════════════════════════════════════
 import 'dotenv/config';
+import { existsSync, readFileSync } from 'fs';
+import { join } from 'path';
 import { neon } from '@neondatabase/serverless';
 import { put } from '@vercel/blob';
 
@@ -98,22 +100,29 @@ async function fetchDriveFiles(query: string, fields: string): Promise<any[]> {
   return data.files || [];
 }
 
-/** Télécharge l'image Drive en w1600 et la téléverse dans Vercel Blob */
+/** Télécharge l'image Drive et la téléverse dans Vercel Blob.
+ *  Essaie l'API Drive (alt=media, fiable côté serveur) puis le
+ *  endpoint thumbnail en repli. */
 async function migrateImage(fileId: string, blobPath: string): Promise<string | null> {
-  try {
-    const res = await fetch(`https://drive.google.com/thumbnail?id=${fileId}&sz=w1600`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const buffer = Buffer.from(await res.arrayBuffer());
-    if (buffer.length < 1000) throw new Error('fichier trop petit / vide');
-    const blob = await put(blobPath, buffer, {
-      access: 'public',
-      contentType: res.headers.get('content-type') || 'image/jpeg',
-    });
-    return blob.url;
-  } catch (e: any) {
-    console.warn(`   ⚠️ Échec téléchargement ${fileId} : ${e.message}`);
-    return null;
+  const candidates = [
+    `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&key=${API_KEY}`,
+    `https://drive.google.com/thumbnail?id=${fileId}&sz=w1600`,
+  ];
+  for (const url of candidates) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) continue;
+      const buffer = Buffer.from(await res.arrayBuffer());
+      if (buffer.length < 1000) continue; // trop petit / page d'erreur
+      const blob = await put(blobPath, buffer, {
+        access: 'public',
+        contentType: res.headers.get('content-type')?.startsWith('image/') ? res.headers.get('content-type')! : 'image/jpeg',
+      });
+      return blob.url;
+    } catch { /* candidate suivant */ }
   }
+  console.warn(`   ⚠️ Échec téléchargement ${fileId}`);
+  return null;
 }
 
 async function uniqueProductSlug(base: string, excludeId?: number): Promise<string> {
@@ -224,6 +233,7 @@ async function migrateGallery() {
   );
   console.log(`🖼️  ${images.length} image(s) trouvée(s) sur Drive.`);
   let imgCreated = 0;
+  let backfilled = 0;
   let position = 0;
   for (const file of images) {
     await sleep(120);
@@ -231,7 +241,28 @@ async function migrateGallery() {
     const [existing] = await sql`SELECT id FROM gallery_items WHERE title = ${title} LIMIT 1`;
     if (existing) continue;
     const ext = (String(file.name).split('.').pop() || 'jpg').toLowerCase();
-    const url = await migrateImage(file.id, `galerie/images/${slugify(title) || file.id}.${ext}`);
+    const blobPath = `galerie/images/${slugify(title) || file.id}.${ext}`;
+    let url = await migrateImage(file.id, blobPath);
+
+    // Complément local : certains fichiers Drive sont vides (size 0) —
+    // la copie locale public/gallery/<nom> sert de source de secours
+    if (!url) {
+      const localPath = join(process.cwd(), 'public', 'gallery', String(file.name));
+      if (existsSync(localPath)) {
+        try {
+          const buf = readFileSync(localPath);
+          if (buf.length > 1000) {
+            const blob = await put(blobPath, buf, { access: 'public', contentType: 'image/jpeg' });
+            url = blob.url;
+            backfilled++;
+            console.log(`   ↩️ complété depuis la copie locale : ${file.name}`);
+          }
+        } catch (e: any) {
+          console.warn(`   ⚠️ Échec copie locale ${file.name} : ${e.message}`);
+        }
+      }
+    }
+
     if (url) {
       await sql`
         INSERT INTO gallery_items (media_type, url, title, is_published, position)
@@ -240,7 +271,7 @@ async function migrateGallery() {
       imgCreated++;
     }
   }
-  console.log(`✅ ${imgCreated} image(s) de galerie migrée(s).`);
+  console.log(`✅ ${imgCreated} image(s) de galerie migrée(s) (dont ${backfilled} depuis les copies locales).`);
 
   // Vidéos : conservées comme liens d'embed Drive (remplaçables par
   // des MP4 téléversés depuis le tableau de bord)

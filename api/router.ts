@@ -77,7 +77,7 @@ const DEFAULT_SETTINGS = {
       "/gallery/IMG-20260531-WA0040.jpg",
       "/gallery/IMG-20260531-WA0051.jpg",
       "/gallery/IMG-20260531-WA0042.jpg",
-      "/gallery/IMG-20260531-WA0088.jpg",
+      "/gallery/IMG-20260531-WA0086.jpg",
       "/gallery/IMG-20260531-WA0038.jpg",
       "/gallery/IMG-20260524-WA0011.jpg",
       "/gallery/IMG-20260531-WA0062.jpg"
